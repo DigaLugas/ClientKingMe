@@ -11,36 +11,46 @@ using KingMeServer;
 
 namespace ClientKingMe
 {
-    public partial class Form1: Form
+    public partial class Form1 : Form
     {
+        private MusicPlayerControl musicPlayer;
+
         public Form1()
         {
-            
             InitializeComponent();
             ApplyCustomStyling();
             atulizarComboBox();
+            AddMusicPlayerControl();
         }
+
+        private void AddMusicPlayerControl()
+        {
+            MusicPlayerControl musicPlayer = new MusicPlayerControl();
+
+            musicPlayer.Location = new System.Drawing.Point(
+                this.ClientSize.Width - 250, 
+                this.ClientSize.Height - 200 
+            );
+
+            this.Controls.Add(musicPlayer);
+        } 
 
         private void ApplyCustomStyling()
         {
-            // Definir tema de cores
             Color primaryColor = Color.FromArgb(57, 89, 156);      
             Color secondaryColor = Color.FromArgb(241, 245, 249); 
             Color accentColor = Color.FromArgb(34, 197, 94);      
 
-            // Estilo do formulário
             this.BackColor = secondaryColor;
             this.Font = new Font("Segoe UI", 9, FontStyle.Regular);
             this.Text = "KingMe - Gerenciador de Partidas";
 
-            // Estilização dos controles
             StyleComboBox(comboBoxPartidas, primaryColor);
             StyleTextBox(nomePartida, primaryColor);
             StyleTextBox(senhaPartida, primaryColor);
             StyleTextBox(detalhesPartida, primaryColor);
             StyleButton(button1, primaryColor, accentColor);
 
-            // Labels com estilo moderno
             StyleLabel(label1, primaryColor);
             StyleLabel(label2, primaryColor);
             StyleLabel(label3, primaryColor);
@@ -51,7 +61,6 @@ namespace ClientKingMe
 
 
 
-            // Adicionar sombra sutil
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
         }
 
