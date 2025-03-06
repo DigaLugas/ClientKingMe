@@ -9,5 +9,6 @@ namespace ClientKingMe
     class Constants
     {
         public const string NomeDoGrupo = "Monges de Cluny";
+        public const string PastaDeMusicas = "./Musicas";
     }
 }
