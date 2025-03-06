@@ -41,7 +41,7 @@ namespace ClientKingMe
             this.barraProgresso = new ProgressBar();
             this.painelBotoes = new Panel();
 
-            this.painelBotoes.Height = 40;
+            this.painelBotoes.Height = 30;
             this.painelBotoes.Dock = DockStyle.Bottom;
 
             this.btnTocarPausar.Text = "▶";
@@ -80,18 +80,18 @@ namespace ClientKingMe
             this.painelBotoes.Controls.Add(btnAleatorio);
             this.painelBotoes.Controls.Add(btnEscolherMusica);
 
-            int larguraBotao = 40;
+            int larguraBotao = 25;
             int espacamento = 5;
             int totalBotoes = painelBotoes.Controls.Count;
             int larguraTotal = (larguraBotao + espacamento) * totalBotoes - espacamento;
 
-            this.Width = 250;
+            this.Width = 175;
 
             for (int i = 0; i < totalBotoes; i++)
             {
                 painelBotoes.Controls[i].Location = new System.Drawing.Point(
                     i * (larguraBotao + espacamento), 0);
-                painelBotoes.Controls[i].Size = new System.Drawing.Size(larguraBotao, 40);
+                painelBotoes.Controls[i].Size = new System.Drawing.Size(larguraBotao, 25);
             }
 
             this.Controls.Add(painelBotoes);
@@ -103,7 +103,7 @@ namespace ClientKingMe
             this.barraProgresso.Dock = DockStyle.Bottom;
             this.barraVolume.Dock = DockStyle.Bottom;
 
-            this.Size = new System.Drawing.Size(250, 150);
+            this.Size = new System.Drawing.Size(175, 150);
 
             this.BackColor = System.Drawing.Color.FromArgb(241, 245, 249);
             this.lblMusicaAtual.ForeColor = System.Drawing.Color.FromArgb(57, 89, 156);

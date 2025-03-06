@@ -28,8 +28,8 @@ namespace ClientKingMe
             MusicPlayerControl musicPlayer = new MusicPlayerControl();
 
             musicPlayer.Location = new System.Drawing.Point(
-                this.ClientSize.Width - 250, 
-                this.ClientSize.Height - 200 
+                this.ClientSize.Width - 210, 
+                this.ClientSize.Height - 550 
             );
 
             this.Controls.Add(musicPlayer);
@@ -49,15 +49,19 @@ namespace ClientKingMe
             StyleTextBox(nomePartida, primaryColor);
             StyleTextBox(senhaPartida, primaryColor);
             StyleTextBox(detalhesPartida, primaryColor);
-            StyleButton(button1, primaryColor, accentColor);
+            StyleButton(criarPartida, primaryColor, accentColor);
+            StyleButton(entrarPartida, primaryColor, accentColor);
 
-            StyleLabel(label1, primaryColor);
-            StyleLabel(label2, primaryColor);
-            StyleLabel(label3, primaryColor);
-            StyleLabel(label4, primaryColor);
-            StyleLabel(label5, primaryColor);
-            StyleLabel(label6, primaryColor);
-            StyleLabel(label7, primaryColor);
+            StyleLabel(label1, primaryColor, 18);
+            StyleLabel(label2, primaryColor, 10);
+            StyleLabel(label3, primaryColor, 10);
+            StyleLabel(label4, primaryColor, 10);
+            StyleLabel(label5, primaryColor, 10);
+            StyleLabel(label6, primaryColor, 10);
+            StyleLabel(label7, primaryColor, 18);
+            StyleLabel(label8, primaryColor, 10);
+            StyleLabel(label9, primaryColor, 10);
+            StyleLabel(label11, primaryColor, 10);
 
 
 
@@ -91,10 +95,10 @@ namespace ClientKingMe
             button.Cursor = Cursors.Hand;
         }
 
-        private void StyleLabel(Label label, Color primaryColor)
+        private void StyleLabel(Label label, Color primaryColor, float textSize)
         {
             label.ForeColor = primaryColor;
-            label.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            label.Font = new Font("Segoe UI", textSize, FontStyle.Bold);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -132,6 +136,7 @@ namespace ClientKingMe
                 detalhesPartida.Text += linha + Environment.NewLine;
                 detalhesPartida.Text += Environment.NewLine;
 
+                label11.Text = $"Nome da partida:\n{detalhes[1].Split(':')[1].Trim()}\nId: {id}";
     
                 string retorno = Jogo.ListarJogadores(Convert.ToInt32(id));
                 string[] jogadores = retorno.Split('\n');
@@ -173,13 +178,10 @@ namespace ClientKingMe
         private void button1_Click_1(object sender, EventArgs e)
         {
            string retorno = Jogo.CriarPartida(nomePartida.Text, senhaPartida.Text, Constants.NomeDoGrupo);
-            if (!retorno.Contains("ERRO"))
+            if (retorno.Contains("ERRO"))
             {
-                MessageBox.Show($"Partida criada com sucesso!\n {retorno}");
-            }
-            else
-            {
-                MessageBox.Show($"{retorno}");
+                MessageBox.Show(retorno);
+                return;
             }
             atulizarComboBox();
         }
@@ -206,6 +208,30 @@ namespace ClientKingMe
             {
                 comboBoxPartidas.SelectedIndex = 0;
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            int id = Convert.ToInt32(label11.Text.Split(':')[2].Trim());
+            string retorno = Jogo.Entrar(id, nomeJogador.Text, senhaPartidaEntrar.Text);
+            if (retorno.Contains("ERRO"))
+            {
+                MessageBox.Show(retorno);
+                return;
+            }
+            Form2 form2 = new Form2();
+            form2.Show();
+            this.Hide();
+        }
+
+        private void label5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label12_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
