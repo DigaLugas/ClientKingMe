@@ -62,6 +62,8 @@ namespace ClientKingMe
             StyleLabel(label8, primaryColor, 10);
             StyleLabel(label9, primaryColor, 10);
             StyleLabel(label11, primaryColor, 10);
+            StyleLabel(label12, primaryColor, 18);
+
 
 
 
@@ -219,8 +221,19 @@ namespace ClientKingMe
                 MessageBox.Show(retorno);
                 return;
             }
-            Form2 form2 = new Form2();
+
+            //passando dados para o form2
+            Dictionary<string, string>  valoresJogo = new Dictionary<string, string>();
+            valoresJogo.Add("idPartida", Convert.ToString(id));
+            valoresJogo.Add("nomePartida", label11.Text);               // tem que mudar isso aq
+            valoresJogo.Add("idJogador", retorno.Split(',')[0]);
+            valoresJogo.Add("nomeJogador", nomeJogador.Text);
+            valoresJogo.Add("senhaJogador", retorno.Split(',')[1]);
+
+            Form2 form2 = new Form2(valoresJogo);
             form2.Show();
+            form2.FormClosed += (s, args) => Application.Exit();
+            form2.ValoresJogo = valoresJogo;
             this.Hide();
         }
 
@@ -230,6 +243,11 @@ namespace ClientKingMe
         }
 
         private void label12_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label11_Click(object sender, EventArgs e)
         {
 
         }

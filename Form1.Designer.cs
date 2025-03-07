@@ -54,7 +54,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(24, 143);
+            this.label1.Location = new System.Drawing.Point(253, 139);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(186, 24);
             this.label1.TabIndex = 2;
@@ -64,7 +64,7 @@
             // comboBoxPartidas
             // 
             this.comboBoxPartidas.FormattingEnabled = true;
-            this.comboBoxPartidas.Location = new System.Drawing.Point(24, 187);
+            this.comboBoxPartidas.Location = new System.Drawing.Point(253, 183);
             this.comboBoxPartidas.Name = "comboBoxPartidas";
             this.comboBoxPartidas.Size = new System.Drawing.Size(284, 21);
             this.comboBoxPartidas.TabIndex = 3;
@@ -73,7 +73,7 @@
             // detalhesPartida
             // 
             this.detalhesPartida.Enabled = false;
-            this.detalhesPartida.Location = new System.Drawing.Point(24, 227);
+            this.detalhesPartida.Location = new System.Drawing.Point(253, 223);
             this.detalhesPartida.Multiline = true;
             this.detalhesPartida.Name = "detalhesPartida";
             this.detalhesPartida.Size = new System.Drawing.Size(284, 201);
@@ -83,7 +83,7 @@
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(380, 143);
+            this.label7.Location = new System.Drawing.Point(24, 139);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(130, 24);
             this.label7.TabIndex = 5;
@@ -112,7 +112,7 @@
             // nomePartida
             // 
             this.nomePartida.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.25F);
-            this.nomePartida.Location = new System.Drawing.Point(384, 224);
+            this.nomePartida.Location = new System.Drawing.Point(28, 220);
             this.nomePartida.Name = "nomePartida";
             this.nomePartida.Size = new System.Drawing.Size(150, 23);
             this.nomePartida.TabIndex = 8;
@@ -121,7 +121,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 12.25F);
-            this.label4.Location = new System.Drawing.Point(384, 193);
+            this.label4.Location = new System.Drawing.Point(28, 189);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(58, 20);
             this.label4.TabIndex = 9;
@@ -131,7 +131,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 12.25F);
-            this.label5.Location = new System.Drawing.Point(384, 279);
+            this.label5.Location = new System.Drawing.Point(28, 275);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(61, 20);
             this.label5.TabIndex = 10;
@@ -141,7 +141,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(378, 212);
+            this.label6.Location = new System.Drawing.Point(578, 122);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(0, 13);
             this.label6.TabIndex = 11;
@@ -150,14 +150,14 @@
             // senhaPartida
             // 
             this.senhaPartida.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.25F);
-            this.senhaPartida.Location = new System.Drawing.Point(384, 310);
+            this.senhaPartida.Location = new System.Drawing.Point(28, 306);
             this.senhaPartida.Name = "senhaPartida";
             this.senhaPartida.Size = new System.Drawing.Size(150, 23);
             this.senhaPartida.TabIndex = 12;
             // 
             // criarPartida
             // 
-            this.criarPartida.Location = new System.Drawing.Point(384, 385);
+            this.criarPartida.Location = new System.Drawing.Point(28, 381);
             this.criarPartida.Name = "criarPartida";
             this.criarPartida.Size = new System.Drawing.Size(150, 43);
             this.criarPartida.TabIndex = 13;
@@ -167,7 +167,7 @@
             // 
             // entrarPartida
             // 
-            this.entrarPartida.Location = new System.Drawing.Point(622, 385);
+            this.entrarPartida.Location = new System.Drawing.Point(605, 380);
             this.entrarPartida.Name = "entrarPartida";
             this.entrarPartida.Size = new System.Drawing.Size(150, 43);
             this.entrarPartida.TabIndex = 14;
@@ -178,7 +178,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(619, 275);
+            this.label8.Location = new System.Drawing.Point(602, 270);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(91, 13);
             this.label8.TabIndex = 15;
@@ -187,7 +187,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(619, 328);
+            this.label9.Location = new System.Drawing.Point(602, 323);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(91, 13);
             this.label9.TabIndex = 16;
@@ -195,14 +195,14 @@
             // 
             // senhaPartidaEntrar
             // 
-            this.senhaPartidaEntrar.Location = new System.Drawing.Point(622, 291);
+            this.senhaPartidaEntrar.Location = new System.Drawing.Point(605, 286);
             this.senhaPartidaEntrar.Name = "senhaPartidaEntrar";
             this.senhaPartidaEntrar.Size = new System.Drawing.Size(150, 20);
             this.senhaPartidaEntrar.TabIndex = 17;
             // 
             // nomeJogador
             // 
-            this.nomeJogador.Location = new System.Drawing.Point(622, 344);
+            this.nomeJogador.Location = new System.Drawing.Point(605, 339);
             this.nomeJogador.Name = "nomeJogador";
             this.nomeJogador.Size = new System.Drawing.Size(150, 20);
             this.nomeJogador.TabIndex = 18;
@@ -211,7 +211,7 @@
             // 
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Palatino Linotype", 48F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(269, 27);
+            this.label10.Location = new System.Drawing.Point(266, 9);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(312, 87);
             this.label10.TabIndex = 19;
@@ -220,17 +220,18 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(619, 200);
+            this.label11.Location = new System.Drawing.Point(602, 195);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(85, 13);
             this.label11.TabIndex = 20;
             this.label11.Text = "Nome da partida";
+            this.label11.Click += new System.EventHandler(this.label11_Click);
             // 
             // label12
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(618, 143);
+            this.label12.Location = new System.Drawing.Point(601, 139);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(177, 24);
             this.label12.TabIndex = 21;
