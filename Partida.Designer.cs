@@ -1,6 +1,6 @@
 ﻿namespace ClientKingMe
 {
-    partial class Form2
+    partial class Partida
     {
         /// <summary>
         /// Required designer variable.
@@ -50,9 +50,9 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(34, 406);
+            this.button1.Location = new System.Drawing.Point(34, 395);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(96, 23);
+            this.button1.Size = new System.Drawing.Size(118, 34);
             this.button1.TabIndex = 1;
             this.button1.Text = "iniciar jogo";
             this.button1.UseVisualStyleBackColor = true;
@@ -70,7 +70,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(31, 47);
+            this.label3.Location = new System.Drawing.Point(31, 60);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(83, 13);
             this.label3.TabIndex = 3;
@@ -79,7 +79,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(31, 143);
+            this.label4.Location = new System.Drawing.Point(31, 160);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(19, 13);
             this.label4.TabIndex = 4;
@@ -88,7 +88,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(31, 170);
+            this.label5.Location = new System.Drawing.Point(31, 187);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(38, 13);
             this.label5.TabIndex = 5;
@@ -97,7 +97,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(31, 197);
+            this.label6.Location = new System.Drawing.Point(31, 214);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(41, 13);
             this.label6.TabIndex = 6;
@@ -105,9 +105,9 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(681, 298);
+            this.button2.Location = new System.Drawing.Point(670, 287);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(100, 23);
+            this.button2.Size = new System.Drawing.Size(118, 34);
             this.button2.TabIndex = 7;
             this.button2.Text = "listar carta";
             this.button2.UseVisualStyleBackColor = true;
@@ -115,9 +115,9 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(681, 336);
+            this.textBox1.Location = new System.Drawing.Point(670, 336);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 20);
+            this.textBox1.Size = new System.Drawing.Size(111, 20);
             this.textBox1.TabIndex = 8;
             // 
             // Form2

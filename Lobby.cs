@@ -11,16 +11,18 @@ using KingMeServer;
 
 namespace ClientKingMe
 {
-    public partial class Form1 : Form
+    public partial class Lobby : Form
     {
         private MusicPlayerControl musicPlayer;
-
-        public Form1()
+        private DesignerConfigurator designer;
+        public Lobby()
         {
+            this.designer = new DesignerConfigurator();
             InitializeComponent();
             ApplyCustomStyling();
             atulizarComboBox();
             AddMusicPlayerControl();
+           
         }
 
         private void AddMusicPlayerControl()
@@ -37,32 +39,26 @@ namespace ClientKingMe
 
         private void ApplyCustomStyling()
         {
-            Color primaryColor = Color.FromArgb(57, 89, 156);      
-            Color secondaryColor = Color.FromArgb(241, 245, 249); 
-            Color accentColor = Color.FromArgb(34, 197, 94);      
-
-            this.BackColor = secondaryColor;
+            this.BackColor = designer.secondaryColor;
             this.Font = new Font("Segoe UI", 9, FontStyle.Regular);
             this.Text = "KingMe - Gerenciador de Partidas";
 
-            StyleComboBox(comboBoxPartidas, primaryColor);
-            StyleTextBox(nomePartida, primaryColor);
-            StyleTextBox(senhaPartida, primaryColor);
-            StyleTextBox(detalhesPartida, primaryColor);
-            StyleButton(criarPartida, primaryColor, accentColor);
-            StyleButton(entrarPartida, primaryColor, accentColor);
+            DesignerConfigurator.StyleComboBox(comboBoxPartidas, designer.primaryColor, 10);
+            DesignerConfigurator.StyleTextBox(detalhesPartida, designer.primaryColor, 10);
+            DesignerConfigurator.StyleButton(criarPartida, designer.primaryColor, designer.accentColor, 10);
+            DesignerConfigurator.StyleButton(entrarPartida, designer.primaryColor, designer.accentColor, 10);
 
-            StyleLabel(label1, primaryColor, 18);
-            StyleLabel(label2, primaryColor, 10);
-            StyleLabel(label3, primaryColor, 10);
-            StyleLabel(label4, primaryColor, 10);
-            StyleLabel(label5, primaryColor, 10);
-            StyleLabel(label6, primaryColor, 10);
-            StyleLabel(label7, primaryColor, 18);
-            StyleLabel(label8, primaryColor, 10);
-            StyleLabel(label9, primaryColor, 10);
-            StyleLabel(label11, primaryColor, 10);
-            StyleLabel(label12, primaryColor, 18);
+            DesignerConfigurator.StyleLabel(label1, designer.primaryColor, 18);
+            DesignerConfigurator.StyleLabel(label2, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label3, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label4, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label5, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label6,  designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label7, designer.primaryColor, 18);
+            DesignerConfigurator.StyleLabel(label8, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label9, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label11, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label12, designer.primaryColor, 18);
 
 
 
@@ -70,38 +66,7 @@ namespace ClientKingMe
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
         }
 
-        private void StyleComboBox(ComboBox comboBox, Color primaryColor)
-        {
-            comboBox.BackColor = Color.White;
-            comboBox.ForeColor = primaryColor;
-            comboBox.Font = new Font("Segoe UI", 10);
-            comboBox.FlatStyle = FlatStyle.Flat;
-            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-        }
-
-        private void StyleTextBox(TextBox textBox, Color primaryColor)
-        {
-            textBox.BackColor = Color.White;
-            textBox.ForeColor = primaryColor;
-            textBox.Font = new Font("Segoe UI", 10);
-            textBox.BorderStyle = BorderStyle.FixedSingle;
-        }
-
-        private void StyleButton(Button button, Color primaryColor, Color accentColor)
-        {
-            button.BackColor = accentColor;
-            button.ForeColor = Color.White;
-            button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderColor = primaryColor;
-            button.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-            button.Cursor = Cursors.Hand;
-        }
-
-        private void StyleLabel(Label label, Color primaryColor, float textSize)
-        {
-            label.ForeColor = primaryColor;
-            label.Font = new Font("Segoe UI", textSize, FontStyle.Bold);
-        }
+        
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -189,6 +154,8 @@ namespace ClientKingMe
         }
         private void atulizarComboBox()
         {
+            senhaPartida.Text = "";
+            nomePartida.Text = "";
             comboBoxPartidas.Items.Clear();
 
             string retorno = Jogo.ListarPartidas("T");
@@ -225,16 +192,16 @@ namespace ClientKingMe
             //passando dados para o form2
             Dictionary<string, string>  valoresJogo = new Dictionary<string, string>();
             valoresJogo.Add("idPartida", Convert.ToString(id));
-            valoresJogo.Add("nomePartida", label11.Text);               // tem que mudar isso aq
+            valoresJogo.Add("nomePartida", label11.Text.Split(':')[1].Trim());
             valoresJogo.Add("idJogador", retorno.Split(',')[0]);
             valoresJogo.Add("nomeJogador", nomeJogador.Text);
             valoresJogo.Add("senhaJogador", retorno.Split(',')[1]);
 
-            Form2 form2 = new Form2(valoresJogo);
+            Partida form2 = new Partida(valoresJogo);
             form2.Show();
             form2.FormClosed += (s, args) => Application.Exit();
             form2.ValoresJogo = valoresJogo;
-            this.Hide();
+           //his.Hide();
         }
 
         private void label5_Click(object sender, EventArgs e)
