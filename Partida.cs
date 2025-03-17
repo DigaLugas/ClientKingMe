@@ -111,11 +111,11 @@ namespace ClientKingMe
             if (retornoMaluco[0] == ValoresJogo["idJogador"])
             {
                
-                    MessageBox.Show($"Sua vez");
+                    MessageBox.Show($"Sua vez, {ValoresJogo["nomeJogador"]}");
                 
             }
             else {
-                MessageBox.Show("Não é sua vez");
+                MessageBox.Show($"Não é sua vez");
 
             }
         }
