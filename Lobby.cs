@@ -181,18 +181,17 @@ namespace ClientKingMe
 
         private void button2_Click(object sender, EventArgs e)
         {
-            int id = Convert.ToInt32(label11.Text.Split(':')[2].Trim());
+            int id = Convert.ToInt32(label11.Text.Split(':')[2]);
             string retorno = Jogo.Entrar(id, nomeJogador.Text, senhaPartidaEntrar.Text);
             if (retorno.Contains("ERRO"))
             {
                 MessageBox.Show(retorno);
                 return;
             }
-
             //passando dados para o form2
             Dictionary<string, string>  valoresJogo = new Dictionary<string, string>();
             valoresJogo.Add("idPartida", Convert.ToString(id));
-            valoresJogo.Add("nomePartida", label11.Text.Split(':')[1].Trim());
+            valoresJogo.Add("nomePartida", label11.Text.Split(':')[1].Trim().Split('\n')[0]);
             valoresJogo.Add("idJogador", retorno.Split(',')[0]);
             valoresJogo.Add("nomeJogador", nomeJogador.Text);
             valoresJogo.Add("senhaJogador", retorno.Split(',')[1]);

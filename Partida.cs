@@ -41,6 +41,7 @@ namespace ClientKingMe
             ApplyCustomStyling();
             label7.Text = "";
             this.ValoresJogo = valoresJogo;
+            label8.Text = "";
             label3.Text = ValoresJogo["nomePartida"];
             label4.Text = $"Id: {ValoresJogo["idJogador"]}";
             label5.Text = $"Nome: {ValoresJogo["nomeJogador"]}";
@@ -55,6 +56,7 @@ namespace ClientKingMe
             DesignerConfigurator.StyleLabel(label4, designer.primaryColor, 10);
             DesignerConfigurator.StyleLabel(label5, designer.primaryColor, 10);
             DesignerConfigurator.StyleLabel(label6, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label8, designer.primaryColor, 10);
             DesignerConfigurator.StyleButton(button1, designer.primaryColor, designer.accentColor, 10);
             DesignerConfigurator.StyleButton(button2, designer.primaryColor, designer.accentColor, 10);
         }
@@ -72,7 +74,6 @@ namespace ClientKingMe
                 MessageBox.Show(retorno);
                 return;
             }
-            MessageBox.Show("Partida Criada com Sucesso!");
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -102,6 +103,7 @@ namespace ClientKingMe
 
         private void button4_Click(object sender, EventArgs e)
         {
+            label8.Text = "";
             var retorno = Jogo.VerificarVez(Convert.ToInt32(ValoresJogo["idPartida"]));
             if (retorno.Contains("ERRO"))
             {
@@ -110,12 +112,26 @@ namespace ClientKingMe
             var retornoMaluco = retorno.Split(',');
             if (retornoMaluco[0] == ValoresJogo["idJogador"])
             {
-               
-                    MessageBox.Show($"Sua vez, {ValoresJogo["nomeJogador"]}");
+
+                label8.Text += $"ID: {ValoresJogo["idJogador"]}, sua vez {ValoresJogo["nomeJogador"]}";
                 
             }
             else {
-                MessageBox.Show($"Não é sua vez");
+                var texto = Jogo.ListarJogadores(Convert.ToInt32(ValoresJogo["idPartida"]));
+                var jogadores = texto.Split('\n');
+                foreach (var jogador in jogadores)
+                {
+                    if (!string.IsNullOrWhiteSpace(jogador))
+                    {
+                        string[] detalhesJogador = jogador.Split(',');
+                        if (detalhesJogador[0] == retornoMaluco[0])
+                        {
+                            label8.Text += $"ID: {detalhesJogador[0]}, vez do {detalhesJogador[1]}";
+
+                        }
+                    }
+                }
+
 
             }
         }
