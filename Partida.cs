@@ -15,27 +15,30 @@ namespace ClientKingMe
     public partial class Partida : Form
     {
         IDictionary<char, string> professores = new Dictionary<char, string>()
-    {
-        {'A', "Adilson Konrad"},
-        {'B', "Beatriz Paiva"},
-        {'C', "Claro"},
-        {'D', "Douglas Baquiao"},
-        {'E', "Eduardo Takeo"},
-        {'G', "Guilherme Rey"},
-        {'H', "Heredia"},
-        {'K', "Karin"},
-        {'L', "Leonardo Takuno"},
-        {'M', "Mario Toledo"},
-        {'Q', "Quintas"},
-        {'R', "Ranulfo"},
-        {'T', "Toshio"},
-    };
+        {
+            {'A', "Adilson Konrad"},
+            {'B', "Beatriz Paiva"},
+            {'C', "Claro"},
+            {'D', "Douglas Baquiao"},
+            {'E', "Eduardo Takeo"},
+            {'G', "Guilherme Rey"},
+            {'H', "Heredia"},
+            {'J', "Joker"},  // Added Joker character since it's in the verificarVez response
+            {'K', "Karin"},
+            {'L', "Leonardo Takuno"},
+            {'M', "Mario Toledo"},
+            {'P', "Pedreiro"}, // Added Pedreiro character since it's in the verificarVez response (P)
+            {'Q', "Quintas"},
+            {'R', "Ranulfo"},
+            {'T', "Toshio"},
+        };
 
         public Dictionary<string, string> ValoresJogo { get; set; }
         private DesignerConfigurator designer;
+        private Tabuleiro tabuleiro; // Add Tabuleiro reference
+
         public Partida(Dictionary<string, string> valoresJogo)
         {
-            
             this.designer = new DesignerConfigurator();
             InitializeComponent();
             ApplyCustomStyling();
@@ -46,6 +49,9 @@ namespace ClientKingMe
             label4.Text = $"Id: {ValoresJogo["idJogador"]}";
             label5.Text = $"Nome: {ValoresJogo["nomeJogador"]}";
             label6.Text = $"Senha: {ValoresJogo["senhaJogador"]}";
+
+            // Initialize the Tabuleiro with the pictureBox1 (assuming pictureBox1 is the game board control)
+            tabuleiro = new Tabuleiro(pictureBox1);
         }
 
         private void ApplyCustomStyling()
@@ -88,9 +94,9 @@ namespace ClientKingMe
             foreach (char c in retorno.ToCharArray())
             {
                 label7.Text += professores.ContainsKey(c) ? professores[c] + "\n" : "";
-
             }
         }
+
         private void label7_Click(object sender, EventArgs e)
         {
 
@@ -108,36 +114,50 @@ namespace ClientKingMe
             if (retorno.Contains("ERRO"))
             {
                 MessageBox.Show(retorno);
+                return;
             }
-            var retornoMaluco = retorno.Split(',');
-            if (retornoMaluco[0] == ValoresJogo["idJogador"])
+
+            // Process the game board state and show character positions
+            tabuleiro.ProcessarRetornoTabuleiro(retorno);
+
+            // Handle turn information
+            var linhas = retorno.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            if (linhas.Length > 0)
             {
+                var primeiraLinha = linhas[0].Split(',');
 
-                label8.Text += $"ID: {ValoresJogo["idJogador"]}, sua vez {ValoresJogo["nomeJogador"]}";
-                
-            }
-            else {
-                var texto = Jogo.ListarJogadores(Convert.ToInt32(ValoresJogo["idPartida"]));
-                var jogadores = texto.Split('\n');
-                foreach (var jogador in jogadores)
+                if (primeiraLinha.Length >= 2 && primeiraLinha[0] == ValoresJogo["idJogador"])
                 {
-                    if (!string.IsNullOrWhiteSpace(jogador))
+                    label8.Text = $"ID: {ValoresJogo["idJogador"]}, sua vez {ValoresJogo["nomeJogador"]}";
+                }
+                else
+                {
+                    var texto = Jogo.ListarJogadores(Convert.ToInt32(ValoresJogo["idPartida"]));
+                    var jogadores = texto.Split('\n');
+                    foreach (var jogador in jogadores)
                     {
-                        string[] detalhesJogador = jogador.Split(',');
-                        if (detalhesJogador[0] == retornoMaluco[0])
+                        if (!string.IsNullOrWhiteSpace(jogador))
                         {
-                            label8.Text += $"ID: {detalhesJogador[0]}, vez do {detalhesJogador[1]}";
-
+                            string[] detalhesJogador = jogador.Split(',');
+                            if (detalhesJogador.Length >= 2 && detalhesJogador[0] == primeiraLinha[0])
+                            {
+                                label8.Text = $"ID: {detalhesJogador[0]}, vez do {detalhesJogador[1]}";
+                                break;
+                            }
                         }
                     }
                 }
-
-
             }
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
+            if (listBox1.SelectedItem == null || comboBox1.SelectedIndex == -1)
+            {
+                MessageBox.Show("Selecione um personagem e um andar");
+                return;
+            }
+
             var primeiraLetra = listBox1.SelectedItem.ToString().First();
             var retorno = Jogo.ColocarPersonagem(Convert.ToInt32(ValoresJogo["idJogador"]), ValoresJogo["senhaJogador"], comboBox1.SelectedIndex, Convert.ToString(primeiraLetra));
             if (retorno.Contains("ERRO"))
@@ -147,8 +167,20 @@ namespace ClientKingMe
             else
             {
                 MessageBox.Show($"Movido {professores[primeiraLetra]}, para setor {comboBox1.SelectedItem}");
+
+                // Update the board after a successful move
+                button4_Click(sender, e);
             }
-        } 
-        
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click_1(object sender, EventArgs e)
+        {
+
+        }
     }
 }

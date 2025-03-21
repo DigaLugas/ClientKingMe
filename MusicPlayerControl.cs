@@ -447,6 +447,23 @@ namespace ClientKingMe
         private TrackBar barraVolume;
         private ProgressBar barraProgresso;
         private Panel painelBotoes;
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // MusicPlayerControl
+            // 
+            this.Name = "MusicPlayerControl";
+            this.Load += new System.EventHandler(this.MusicPlayerControl_Load);
+            this.ResumeLayout(false);
+
+        }
+
+        private void MusicPlayerControl_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public partial class FormSelecaoMusica : Form
