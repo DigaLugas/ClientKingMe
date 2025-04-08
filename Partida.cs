@@ -14,7 +14,7 @@ namespace ClientKingMe
 {
     public partial class Partida : Form
     {
-        IDictionary<char, string> professores = new Dictionary<char, string>()
+        Dictionary<char, string> professores = new Dictionary<char, string>()
         {
             {'A', "Adilson Konrad"},
             {'B', "Beatriz Paiva"},
@@ -31,6 +31,12 @@ namespace ClientKingMe
             {'Q', "Quintas"},
             {'R', "Ranulfo"},
             {'T', "Toshio"},
+        };
+        Dictionary<string, string> fases = new Dictionary<string, string>()
+        {
+            {"S", "posicionamento"},
+            {"p", "promoção"},
+            {"V", "Votação"},
         };
 
         public Dictionary<string, string> ValoresJogo { get; set; }
@@ -63,7 +69,8 @@ namespace ClientKingMe
             DesignerConfigurator.StyleLabel(label4, designer.primaryColor, 10);
             DesignerConfigurator.StyleLabel(label5, designer.primaryColor, 10);
             DesignerConfigurator.StyleLabel(label6, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label8, designer.primaryColor, 10);
+            DesignerConfigurator.StyleLabel(label8, designer.primaryColor, 9);
+            DesignerConfigurator.StyleLabel(label9, designer.primaryColor, 9);
 
             DesignerConfigurator.StyleButton(button1, designer.primaryColor, designer.accentColor, 10);
             DesignerConfigurator.StyleButton(button2, designer.primaryColor, designer.accentColor, 10);
@@ -100,6 +107,7 @@ namespace ClientKingMe
                 return;
             }
 
+            label7.Text = "";
             foreach (char c in retorno.ToCharArray())
             {
                 label7.Text += professores.ContainsKey(c) ? professores[c] + "\n" : "";
@@ -132,10 +140,20 @@ namespace ClientKingMe
             if (linhas.Length > 0)
             {
                 var primeiraLinha = linhas[0].Split(',');
+                label9.Text = "Estamos na fase de " + fases[primeiraLinha[3].ToUpper()];
 
                 if (primeiraLinha.Length >= 2 && primeiraLinha[0] == ValoresJogo["idJogador"])
                 {
                     label8.Text = $"ID: {ValoresJogo["idJogador"]}, sua vez {ValoresJogo["nomeJogador"]}";
+                    if (primeiraLinha[3] == "V")
+                    {
+                        var voto = MessageBox.Show("Voce aceita o persoagem para ser o rei?", "Votação", MessageBoxButtons.YesNo);
+                        Jogo.Votar(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            voto == DialogResult.Yes ? "s" : "n"
+                        );
+                    }
                 }
                 else
                 {
@@ -182,32 +200,24 @@ namespace ClientKingMe
                 string retorno = string.Empty;
                 var primeiraLetra = listBox1.SelectedItem.ToString().First();
 
-                bool acaoRealizada = false;
-                for (int i = 0; i < dados.Length; i++)
+                switch (dados[3])
                 {
-                    switch (dados[i])
-                    {
-                        case "S": // Colocar Personagem
-                            retorno = Jogo.ColocarPersonagem(
-                                Convert.ToInt32(ValoresJogo["idJogador"]),
-                                ValoresJogo["senhaJogador"],
-                                comboBox1.SelectedIndex,
-                                Convert.ToString(primeiraLetra)
-                            );
-                            acaoRealizada = true;
-                            break;
+                    case "S": // Colocar Personagem
+                        retorno = Jogo.ColocarPersonagem(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            comboBox1.SelectedIndex,
+                            Convert.ToString(primeiraLetra)
+                        );
+                        break;
 
-                        case "P": // Promover Personagem
-                            retorno = Jogo.Promover(
-                                Convert.ToInt32(ValoresJogo["idJogador"]),
-                                ValoresJogo["senhaJogador"],
-                                primeiraLetra.ToString()
-                            );
-                            acaoRealizada = true;
-                            break;
-                    }
-
-                    if (acaoRealizada) break;
+                    case "P": // Promover Personagem
+                        retorno = Jogo.Promover(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            primeiraLetra.ToString()
+                        );
+                        break;
                 }
 
                 if (string.IsNullOrEmpty(retorno))
