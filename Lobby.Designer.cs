@@ -106,7 +106,7 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(48, 13);
             this.label3.TabIndex = 7;
-            this.label3.Text = "DLL: 1.1";
+            this.label3.Text = "DLL: 1.2";
             this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // nomePartida
@@ -238,7 +238,7 @@
             this.label12.Text = "Entrar em Partida:";
             this.label12.Click += new System.EventHandler(this.label12_Click);
             // 
-            // Form1
+            // Lobby
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -263,7 +263,7 @@
             this.Controls.Add(this.detalhesPartida);
             this.Controls.Add(this.comboBoxPartidas);
             this.Controls.Add(this.label1);
-            this.Name = "Form1";
+            this.Name = "Lobby";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);

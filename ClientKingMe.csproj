@@ -40,8 +40,9 @@
       <HintPath>packages\WMPLib.1.0.0\lib\Interop.WMPLib.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="KingMeServer">
-      <HintPath>.\KingMeServer.dll</HintPath>
+    <Reference Include="KingMeServer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\OneDrive\Documentos\KingMeServer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -110,6 +111,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="KingMeServer.dll" />
     <Content Include="Properties\A.png" />
     <Content Include="Properties\B.png" />
     <Content Include="Properties\C.png" />
@@ -118,6 +120,7 @@
     <Content Include="Properties\G.png" />
     <Content Include="Properties\H.png" />
     <Content Include="Properties\K.png" />
+    <Content Include="Properties\KingMeServer.dll" />
     <Content Include="Properties\L.png" />
     <Content Include="Properties\M.png" />
     <Content Include="Properties\Q.png" />
