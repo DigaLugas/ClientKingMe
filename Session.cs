@@ -47,6 +47,13 @@ namespace ClientKingMe
         private string currentBoardState = string.Empty;
         private string currentGamePhase = ApplicationConstants.GamePhases.Positioning;
 
+        private System.Windows.Forms.Timer aiTimer;
+        private bool autoPlayEnabled = false;
+        private Button toggleAutoPlayButton;
+        private Label aiStatusLabel;
+        private const int AI_CHECK_INTERVAL = 5000;
+
+
         public GameSessionForm(Dictionary<string, string> valoresJogo)
         {
             this.designer = new DesignerConfigurator();
@@ -57,6 +64,11 @@ namespace ClientKingMe
             this.ValoresJogo = valoresJogo;
             label8.Text = "";
 
+            aiTimer = new System.Windows.Forms.Timer();
+            aiTimer.Interval = AI_CHECK_INTERVAL;
+            aiTimer.Tick += AiTimer_Tick;
+
+
             // Set player information labels
             label3.Text = ValoresJogo["nomePartida"];
             label4.Text = $"Id: {ValoresJogo["idJogador"]}";
@@ -65,11 +77,6 @@ namespace ClientKingMe
 
             // Initialize game board
             gameBoard = new GameBoard(pictureBox1);
-
-            // Initialize MCTS components
-            mctsAgent = new MCTSAgent(int.Parse(ValoresJogo["idJogador"]), 2000);
-            gameStateAdapter = new GameStateAdapter();
-
             // Add AI move button
             Button aiMoveButton = new Button
             {
@@ -79,6 +86,30 @@ namespace ClientKingMe
             };
             aiMoveButton.Click += AiMoveButton_Click;
             this.Controls.Add(aiMoveButton);
+            // Initialize MCTS components
+            mctsAgent = new MCTSAgent(int.Parse(ValoresJogo["idJogador"]), 2000);
+            gameStateAdapter = new GameStateAdapter();
+
+            aiStatusLabel = new Label
+            {
+                Text = "AI: Inativo",
+                Location = new Point(button3.Location.X + button3.Width + 20, button3.Location.Y),
+                AutoSize = true,
+                ForeColor = Color.DarkGray
+            };
+            this.Controls.Add(aiStatusLabel);
+
+            // Add toggle button for auto play
+            toggleAutoPlayButton = new Button
+            {
+                Text = "Ativar Auto-Play",
+                Location = new Point(aiMoveButton.Location.X, aiMoveButton.Location.Y + aiMoveButton.Height + 10),
+                Size = aiMoveButton.Size
+            };
+            toggleAutoPlayButton.Click += ToggleAutoPlayButton_Click;
+            this.Controls.Add(toggleAutoPlayButton);
+            DesignerConfigurator.StyleButton(toggleAutoPlayButton, designer.primaryColor, designer.accentColor, 10);
+
 
             DesignerConfigurator.StyleButton(aiMoveButton, designer.primaryColor, designer.accentColor, 10);
         }
@@ -182,10 +213,8 @@ namespace ClientKingMe
 
                 if (!ErrorHandler.HandleServerResponse(response))
                 {
-                    // Update the view after move
                     button4_Click(null, EventArgs.Empty);
 
-                    // Show move description
                     string moveDescription = mctsAgent.GetMoveDescription(gameState, bestMove);
                     MessageBox.Show($"AI move: {moveDescription}", "AI Move", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -195,7 +224,189 @@ namespace ClientKingMe
                 ErrorHandler.ShowError($"Erro ao fazer movimento AI: {ex.Message}");
             }
         }
+        private void ToggleAutoPlayButton_Click(object sender, EventArgs e)
+        {
+            autoPlayEnabled = !autoPlayEnabled;
 
+            if (autoPlayEnabled)
+            {
+                toggleAutoPlayButton.Text = "Desativar Auto-Play";
+                aiStatusLabel.Text = "AI: Monitorando";
+                aiStatusLabel.ForeColor = Color.Green;
+                aiTimer.Start();
+
+                // Check immediately if it's our turn
+                AiTimer_Tick(null, EventArgs.Empty);
+            }
+            else
+            {
+                toggleAutoPlayButton.Text = "Ativar Auto-Play";
+                aiStatusLabel.Text = "AI: Inativo";
+                aiStatusLabel.ForeColor = Color.DarkGray;
+                aiTimer.Stop();
+            }
+        }
+
+        private void AiTimer_Tick(object sender, EventArgs e)
+        {
+            if (!autoPlayEnabled)
+                return;
+
+            try
+            {
+                // Check if it's our turn
+                string turnInfo = Jogo.VerificarVez(Convert.ToInt32(ValoresJogo["idPartida"]));
+                if (ErrorHandler.HandleServerResponse(turnInfo))
+                    return;
+
+                string[] lines = turnInfo.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                if (lines.Length == 0)
+                    return;
+
+                string[] firstLine = lines[0].Split(',');
+                if (firstLine.Length < 2 || firstLine[0] != ValoresJogo["idJogador"])
+                    return; // Not our turn
+
+                // It's our turn! Execute AI move
+                aiStatusLabel.Text = "AI: Pensando...";
+                aiStatusLabel.ForeColor = Color.Blue;
+
+                // Update UI to reflect current game state
+                currentBoardState = turnInfo;
+                if (firstLine.Length >= 4)
+                {
+                    currentGamePhase = firstLine[3];
+                }
+
+                // Make sure we have available characters
+                if (availableCharacters.Count == 0)
+                {
+                    string charactersData = Jogo.ListarCartas(
+                        Convert.ToInt32(ValoresJogo["idJogador"]),
+                        ValoresJogo["senhaJogador"]
+                    );
+
+                    if (!ErrorHandler.HandleServerResponse(charactersData))
+                    {
+                        availableCharacters = charactersData.ToCharArray().ToList();
+                        UpdateCharacterList(charactersData);
+                        UpdateCharacterListBox(charactersData);
+                    }
+                }
+
+                // Execute AI move with a slight delay to make it visible in the UI
+                this.BeginInvoke(new Action(() => {
+                    ExecuteAiMove();
+                }));
+            }
+            catch (Exception ex)
+            {
+                aiStatusLabel.Text = "AI: Erro";
+                aiStatusLabel.ForeColor = Color.Red;
+                ErrorHandler.ShowError($"Erro no timer AI: {ex.Message}");
+            }
+        }
+
+        private void ExecuteAiMove()
+        {
+            try
+            {
+                // Create game state for MCTS
+                var gameState = gameStateAdapter.CreateGameState(
+                    ValoresJogo,
+                    currentGamePhase,
+                    availableCharacters,
+                    currentBoardState
+                );
+
+                // Get best move from MCTS
+                var bestMove = mctsAgent.MakeMove(gameState);
+                if (bestMove == null)
+                {
+                    aiStatusLabel.Text = "AI: Sem movimentos";
+                    aiStatusLabel.ForeColor = Color.Orange;
+                    return;
+                }
+
+                // Convert move to client format
+                string moveData = gameStateAdapter.ConvertMoveToClientFormat(bestMove);
+                string moveDescription = mctsAgent.GetMoveDescription(gameState, bestMove);
+
+                // Display what the AI is doing
+                aiStatusLabel.Text = $"AI: {moveDescription}";
+
+                // Execute the move
+                string response = string.Empty;
+
+                switch (currentGamePhase)
+                {
+                    case ApplicationConstants.GamePhases.Positioning:
+                        string[] parts = moveData.Split(',');
+                        if (parts.Length >= 2)
+                        {
+                            int floor = int.Parse(parts[0]);
+                            string character = parts[1];
+                            response = Jogo.ColocarPersonagem(
+                                Convert.ToInt32(ValoresJogo["idJogador"]),
+                                ValoresJogo["senhaJogador"],
+                                floor,
+                                character
+                            );
+                        }
+                        break;
+
+                    case ApplicationConstants.GamePhases.Promotion:
+                        response = Jogo.Promover(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            moveData
+                        );
+                        break;
+
+                    case ApplicationConstants.GamePhases.Voting:
+                        response = Jogo.Votar(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            moveData
+                        );
+                        break;
+                }
+
+                if (!ErrorHandler.HandleServerResponse(response))
+                {
+                    // Update the view after move
+                    button4_Click(null, EventArgs.Empty);
+
+                    // Indicate success
+                    aiStatusLabel.Text = "AI: Movimento concluído";
+                    aiStatusLabel.ForeColor = Color.Green;
+                }
+                else
+                {
+                    aiStatusLabel.Text = "AI: Erro no movimento";
+                    aiStatusLabel.ForeColor = Color.Red;
+                }
+            }
+            catch (Exception ex)
+            {
+                aiStatusLabel.Text = "AI: Erro";
+                aiStatusLabel.ForeColor = Color.Red;
+                ErrorHandler.ShowError($"Erro ao fazer movimento AI: {ex.Message}");
+            }
+        }
+       
+        // Add a method to handle form closing and cleanup
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // Stop the timer to prevent issues
+            if (aiTimer != null)
+            {
+                aiTimer.Stop();
+                aiTimer.Dispose();
+            }
+
+            base.OnFormClosing(e);
+        }
         private void ApplyCustomStyling()
         {
             // Style labels

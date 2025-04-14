@@ -49,7 +49,8 @@ namespace MCTS
         {
             var validMoves = rules.GetValidMoves(State);
             var triedMoves = Children.Select(child => child.Move).ToList();
-            var untriedMoves = validMoves.Where(move => !triedMoves.Any(m => IsSameMove(m, move))).ToList();
+            Func<GameMove, bool> predicate = movement => !triedMoves.Any(m => IsSameMove(m, movement));
+            var untriedMoves = validMoves.Where(predicate).ToList();
 
             if (untriedMoves.Count == 0)
                 return null;

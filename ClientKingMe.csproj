@@ -72,7 +72,6 @@
     <Compile Include="MCTS\MCTSNode.cs" />
     <Compile Include="MCTS\MCTSParallel.cs" />
     <Compile Include="MCTS\Model.cs" />
-    <Compile Include="MCTS\Program.cs" />
     <Compile Include="Session.cs">
       <SubType>Form</SubType>
     </Compile>
