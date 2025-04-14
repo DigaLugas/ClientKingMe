@@ -15,6 +15,7 @@ namespace MCTS
             if (state.CurrentPhase == GameState.GamePhase.Placement)
             {
                 // Fase de colocação de personagens
+                // Considera TODOS os personagens disponíveis, não apenas os da carta
                 var availableCharacters = state.GetCharactersAvailableForPlacement();
                 foreach (var character in availableCharacters)
                 {

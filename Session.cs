@@ -77,15 +77,7 @@ namespace ClientKingMe
 
             // Initialize game board
             gameBoard = new GameBoard(pictureBox1);
-            // Add AI move button
-            Button aiMoveButton = new Button
-            {
-                Text = "AI Jogar",
-                Location = new Point(button3.Location.X, button3.Location.Y + button3.Height + 10),
-                Size = button3.Size
-            };
-            aiMoveButton.Click += AiMoveButton_Click;
-            this.Controls.Add(aiMoveButton);
+
             // Initialize MCTS components
             mctsAgent = new MCTSAgent(int.Parse(ValoresJogo["idJogador"]), 2000);
             gameStateAdapter = new GameStateAdapter();
@@ -103,15 +95,13 @@ namespace ClientKingMe
             toggleAutoPlayButton = new Button
             {
                 Text = "Ativar Auto-Play",
-                Location = new Point(aiMoveButton.Location.X, aiMoveButton.Location.Y + aiMoveButton.Height + 10),
-                Size = aiMoveButton.Size
+                Location = new Point(button4.Location.X, button4.Location.Y + button4.Height + 7),
+                Size = button4.Size
             };
             toggleAutoPlayButton.Click += ToggleAutoPlayButton_Click;
             this.Controls.Add(toggleAutoPlayButton);
             DesignerConfigurator.StyleButton(toggleAutoPlayButton, designer.primaryColor, designer.accentColor, 10);
 
-
-            DesignerConfigurator.StyleButton(aiMoveButton, designer.primaryColor, designer.accentColor, 10);
         }
 
         private void AiMoveButton_Click(object sender, EventArgs e)
@@ -311,6 +301,44 @@ namespace ClientKingMe
         {
             try
             {
+                // Obter a lista atualizada de personagens já colocados no tabuleiro
+                string boardState = Jogo.VerificarVez(
+                    Convert.ToInt32(ValoresJogo["idPartida"])
+                );
+
+                if (ErrorHandler.HandleServerResponse(boardState))
+                    return;
+
+                currentBoardState = boardState;
+
+                // Na fase de posicionamento, precisamos obter todos os personagens
+                // que ainda não estão no tabuleiro
+                if (currentGamePhase == ApplicationConstants.GamePhases.Positioning)
+                {
+                    // Dicionário para armazenar os personagens já colocados no tabuleiro
+                    var charactersOnBoard = new HashSet<char>();
+
+                    string[] lines = boardState.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string line in lines)
+                    {
+                        if (string.IsNullOrWhiteSpace(line))
+                            continue;
+
+                        string[] parts = line.Split(',');
+                        if (parts.Length >= 2)
+                        {
+                            char characterCode = parts[1][0];
+                            charactersOnBoard.Add(characterCode);
+                        }
+                    }
+
+                    // Lista de todos os personagens disponíveis
+                    var allCharacters = new List<char>() { 'A', 'B', 'C', 'D', 'E', 'G', 'H', 'K', 'L', 'M', 'Q', 'R', 'T' };
+
+                    // Personagens disponíveis são todos que ainda não estão no tabuleiro
+                    availableCharacters = allCharacters.Where(c => !charactersOnBoard.Contains(c)).ToList();
+                }
+
                 // Create game state for MCTS
                 var gameState = gameStateAdapter.CreateGameState(
                     ValoresJogo,
@@ -394,7 +422,7 @@ namespace ClientKingMe
                 ErrorHandler.ShowError($"Erro ao fazer movimento AI: {ex.Message}");
             }
         }
-       
+
         // Add a method to handle form closing and cleanup
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
@@ -455,12 +483,14 @@ namespace ClientKingMe
             if (ErrorHandler.HandleServerResponse(response))
                 return;
 
-            // Store available characters for AI
-            availableCharacters = response.ToCharArray().ToList();
+            // Atualizar apenas a exibição da carta do jogador
+            UpdatePlayerCardDisplay(response);
 
-            // Populate character list
-            UpdateCharacterList(response);
-            UpdateCharacterListBox(response);
+            // Preencher a listBox com todos os personagens disponíveis no jogo
+            if (listBox1.Items.Count == 0)
+            {
+                UpdateCharacterListBox("");
+            }
         }
 
         private void UpdateCharacterList(string charactersData)
@@ -478,12 +508,11 @@ namespace ClientKingMe
         private void UpdateCharacterListBox(string charactersData)
         {
             listBox1.Items.Clear();
-            foreach (char c in charactersData.ToCharArray())
+
+            // Preencher a listBox com todos os personagens do jogo
+            foreach (var character in characterNames)
             {
-                if (characterNames.ContainsKey(c))
-                {
-                    listBox1.Items.Add($"{c} - {characterNames[c]}");
-                }
+                listBox1.Items.Add($"{character.Key} - {character.Value}");
             }
 
             if (listBox1.Items.Count > 0)
@@ -491,7 +520,7 @@ namespace ClientKingMe
                 listBox1.SelectedIndex = 0;
             }
 
-            // Also ensure the floor combobox is populated
+            // Também garantir que o combobox de andares está preenchido
             if (comboBox1.Items.Count == 0)
             {
                 for (int i = 0; i < 6; i++)
@@ -500,6 +529,22 @@ namespace ClientKingMe
                 }
                 comboBox1.SelectedIndex = 0;
             }
+        }
+
+        // Método para atualizar apenas a exibição da carta do jogador
+        private void UpdatePlayerCardDisplay(string charactersData)
+        {
+            label7.Text = "";
+            foreach (char c in charactersData.ToCharArray())
+            {
+                if (characterNames.ContainsKey(c))
+                {
+                    label7.Text += characterNames[c] + "\n";
+                }
+            }
+
+            // Armazenar os personagens disponíveis para o AI
+            availableCharacters = charactersData.ToCharArray().ToList();
         }
 
         // Keep original method name to match the designer file
@@ -538,8 +583,25 @@ namespace ClientKingMe
             // Update phase information
             if (firstLine.Length >= 4 && gamePhaseNames.ContainsKey(firstLine[3]))
             {
+                string previousPhase = currentGamePhase;
                 currentGamePhase = firstLine[3];
                 label9.Text = "Estamos na fase de " + gamePhaseNames[firstLine[3]];
+
+                // Se entramos na fase de posicionamento, atualizar carta do jogador
+                if (currentGamePhase == ApplicationConstants.GamePhases.Positioning &&
+                    previousPhase != ApplicationConstants.GamePhases.Positioning)
+                {
+                    // Buscar cartas do jogador
+                    string charactersData = Jogo.ListarCartas(
+                        Convert.ToInt32(ValoresJogo["idJogador"]),
+                        ValoresJogo["senhaJogador"]
+                    );
+
+                    if (!ErrorHandler.HandleServerResponse(charactersData))
+                    {
+                        UpdatePlayerCardDisplay(charactersData);
+                    }
+                }
             }
 
             // Check if it's current player's turn
@@ -644,6 +706,8 @@ namespace ClientKingMe
             switch (phaseInfo[3])
             {
                 case ApplicationConstants.GamePhases.Positioning:
+                    // Na fase de posicionamento, permitir posicionar qualquer personagem disponível
+                    // Não verificamos se está na carta do jogador
                     response = Jogo.ColocarPersonagem(
                         Convert.ToInt32(ValoresJogo["idJogador"]),
                         ValoresJogo["senhaJogador"],

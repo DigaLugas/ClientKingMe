@@ -106,23 +106,24 @@ namespace ClientKingMe
 
         private void ProcessAvailableCharacters(MCTS.GameState gameState, List<char> availableCharacters)
         {
-            // Marca como eliminados os personagens que não estão disponíveis
+            // IMPORTANTE: Na fase de posicionamento, todos os personagens não colocados estão disponíveis
+            // Não limitamos aos personagens da carta do jogador
+
+            // Primeiro, verificamos quais personagens já estão no tabuleiro
+            var charactersOnBoard = new HashSet<int>();
+
             foreach (var character in gameState.Characters)
             {
-                character.IsEliminated = true;
+                if (character.CurrentFloor != MCTS.Floor.Servants)
+                {
+                    charactersOnBoard.Add(character.Id);
+                }
             }
 
-            // Marca como disponíveis os personagens da lista
-            foreach (char charCode in availableCharacters)
+            // Marca como disponíveis todos os personagens que não estão no tabuleiro
+            foreach (var character in gameState.Characters)
             {
-                if (_characterMap.TryGetValue(charCode, out int characterId))
-                {
-                    var character = gameState.Characters.FirstOrDefault(c => c.Id == characterId);
-                    if (character != null)
-                    {
-                        character.IsEliminated = false;
-                    }
-                }
+                character.IsEliminated = charactersOnBoard.Contains(character.Id);
             }
         }
 
