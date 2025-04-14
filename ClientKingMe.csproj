@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErrorHandling.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="DesignerConfigurator.cs" />
     <Compile Include="Lobby.cs">
@@ -65,11 +66,11 @@
     <Compile Include="Lobby.Designer.cs">
       <DependentUpon>Lobby.cs</DependentUpon>
     </Compile>
-    <Compile Include="Partida.cs">
+    <Compile Include="Session.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Partida.Designer.cs">
-      <DependentUpon>Partida.cs</DependentUpon>
+    <Compile Include="Session.Designer.cs">
+      <DependentUpon>Session.cs</DependentUpon>
     </Compile>
     <Compile Include="MusicPlayerControl.cs">
       <SubType>UserControl</SubType>
@@ -81,12 +82,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Tabuleiro.cs" />
+    <Compile Include="GameBoard.cs" />
     <EmbeddedResource Include="Lobby.resx">
       <DependentUpon>Lobby.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Partida.resx">
-      <DependentUpon>Partida.cs</DependentUpon>
+    <EmbeddedResource Include="Session.resx">
+      <DependentUpon>Session.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MusicPlayerControl.resx">
       <DependentUpon>MusicPlayerControl.cs</DependentUpon>

@@ -1,41 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using KingMeServer;
 
 namespace ClientKingMe
 {
-    public partial class Lobby : Form
+    public partial class GameLobbyForm : Form
     {
         private MusicPlayerControl musicPlayer;
-        private DesignerConfigurator designer;
-        public Lobby()
+        private readonly DesignerConfigurator designer;
+
+        public GameLobbyForm()
         {
             this.designer = new DesignerConfigurator();
             InitializeComponent();
             ApplyCustomStyling();
-            atulizarComboBox();
+            RefreshGamesList();
             AddMusicPlayerControl();
-           
         }
 
         private void AddMusicPlayerControl()
         {
-            MusicPlayerControl musicPlayer = new MusicPlayerControl();
-
-            musicPlayer.Location = new System.Drawing.Point(
-                this.ClientSize.Width - 210, 
-                this.ClientSize.Height - 550 
-            );
+            musicPlayer = new MusicPlayerControl
+            {
+                Location = new Point(
+                    this.ClientSize.Width - 210,
+                    this.ClientSize.Height - 550
+                )
+            };
 
             this.Controls.Add(musicPlayer);
-        } 
+        }
 
         private void ApplyCustomStyling()
         {
@@ -43,179 +39,149 @@ namespace ClientKingMe
             this.Font = new Font("Segoe UI", 9, FontStyle.Regular);
             this.Text = "KingMe - Gerenciador de Partidas";
 
+            // Style combo box and text box
             DesignerConfigurator.StyleComboBox(comboBoxPartidas, designer.primaryColor, 10);
             DesignerConfigurator.StyleTextBox(detalhesPartida, designer.primaryColor, 10);
+
+            // Style buttons - keeping original variable names
             DesignerConfigurator.StyleButton(criarPartida, designer.primaryColor, designer.accentColor, 10);
             DesignerConfigurator.StyleButton(entrarPartida, designer.primaryColor, designer.accentColor, 10);
 
-            DesignerConfigurator.StyleLabel(label1, designer.primaryColor, 18);
-            DesignerConfigurator.StyleLabel(label2, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label3, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label4, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label5, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label6,  designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label7, designer.primaryColor, 18);
-            DesignerConfigurator.StyleLabel(label8, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label9, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label11, designer.primaryColor, 10);
-            DesignerConfigurator.StyleLabel(label12, designer.primaryColor, 18);
+            // Style labels
+            Label[] labelsToStyle = { label1, label2, label3, label4, label5, label6, label8, label9, label11 };
+            foreach (Label label in labelsToStyle)
+            {
+                DesignerConfigurator.StyleLabel(label, designer.primaryColor, 10);
+            }
 
-
-
+            // Style headers
+            Label[] headerLabels = { label1, label7, label12 };
+            foreach (Label header in headerLabels)
+            {
+                DesignerConfigurator.StyleLabel(header, designer.primaryColor, 18);
+            }
 
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true);
         }
 
-        
-
-        private void button1_Click(object sender, EventArgs e)
+        private void RefreshGamesList()
         {
-      
-        }
-
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-
-        }
-
-        private void comboBoxPartidas_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (comboBoxPartidas.SelectedIndex >= 0)
-            {
-
-                detalhesPartida.Text = "";
-
-  
-                string linha = comboBoxPartidas.SelectedItem.ToString();
-                string[] detalhes = linha.Split('|');
-                string id = detalhes[0].Split(':')[1].Trim();
-                detalhesPartida.Text += "--- DETALHES DA PARTIDA ---" + Environment.NewLine;
-                detalhesPartida.Text += linha + Environment.NewLine;
-                detalhesPartida.Text += Environment.NewLine;
-
-                label11.Text = $"Nome da partida:\n{detalhes[1].Split(':')[1].Trim()}\nId: {id}";
-    
-                string retorno = Jogo.ListarJogadores(Convert.ToInt32(id));
-                string[] jogadores = retorno.Split('\n');
-
-                detalhesPartida.Text += "--- JOGADORES ---" + Environment.NewLine;
-                foreach (var jogador in jogadores)
-                {
-                    if (!string.IsNullOrWhiteSpace(jogador))
-                    {
-                        string[] detalhesJogador = jogador.Split(',');
-                  
-                        string linhaFormatada = $"ID: {detalhesJogador[0]} | Nome: {detalhesJogador[1]} | Pontuação: {detalhesJogador[2]}";
-                        detalhesPartida.Text += linhaFormatada + Environment.NewLine;
-                    }
-                }
-            }
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label6_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button1_Click_1(object sender, EventArgs e)
-        {
-           string retorno = Jogo.CriarPartida(nomePartida.Text, senhaPartida.Text, Constants.NomeDoGrupo);
-            if (retorno.Contains("ERRO"))
-            {
-                MessageBox.Show(retorno);
-                return;
-            }
-            atulizarComboBox();
-        }
-        private void atulizarComboBox()
-        {
+            // Clear inputs
             senhaPartida.Text = "";
             nomePartida.Text = "";
             comboBoxPartidas.Items.Clear();
 
-            string retorno = Jogo.ListarPartidas("T");
+            string response = Jogo.ListarPartidas("T");
+            string[] games = response.Split('\n');
 
-            string[] partidas = retorno.Split('\n');
-
-            foreach (string partida in partidas)
+            foreach (string game in games)
             {
-                if (!string.IsNullOrWhiteSpace(partida))
+                if (!string.IsNullOrWhiteSpace(game))
                 {
-                    string[] detalhes = partida.Split(',');
-
-                    string linhaFormatada = $"ID: {detalhes[0]} | Nome: {detalhes[1]} | Data: {detalhes[2]} | Status: {detalhes[3]}";
-
-                    comboBoxPartidas.Items.Add(linhaFormatada);
+                    string[] details = game.Split(',');
+                    string formattedLine = $"ID: {details[0]} | Nome: {details[1]} | Data: {details[2]} | Status: {details[3]}";
+                    comboBoxPartidas.Items.Add(formattedLine);
                 }
             }
+
             if (comboBoxPartidas.Items.Count > 0)
             {
                 comboBoxPartidas.SelectedIndex = 0;
             }
         }
 
+        private void comboBoxPartidas_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxPartidas.SelectedIndex < 0)
+                return;
+
+            UpdateGameDetails();
+        }
+
+        private void UpdateGameDetails()
+        {
+            detalhesPartida.Text = "";
+
+            string selectedGame = comboBoxPartidas.SelectedItem.ToString();
+            string[] details = selectedGame.Split('|');
+            string gameId = details[0].Split(':')[1].Trim();
+
+            // Update game details area
+            detalhesPartida.Text += "--- DETALHES DA PARTIDA ---" + Environment.NewLine;
+            detalhesPartida.Text += selectedGame + Environment.NewLine;
+            detalhesPartida.Text += Environment.NewLine;
+
+            // Update game name label
+            label11.Text = $"Nome da partida:\n{details[1].Split(':')[1].Trim()}\nId: {gameId}";
+
+            // Get and display players
+            string playersResponse = Jogo.ListarJogadores(Convert.ToInt32(gameId));
+            string[] players = playersResponse.Split('\n');
+
+            detalhesPartida.Text += "--- JOGADORES ---" + Environment.NewLine;
+            foreach (var player in players)
+            {
+                if (!string.IsNullOrWhiteSpace(player))
+                {
+                    string[] playerDetails = player.Split(',');
+                    string formattedLine = $"ID: {playerDetails[0]} | Nome: {playerDetails[1]} | Pontuação: {playerDetails[2]}";
+                    detalhesPartida.Text += formattedLine + Environment.NewLine;
+                }
+            }
+        }
+
+        // Keep original method name to match the designer file
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            string response = Jogo.CriarPartida(
+                nomePartida.Text,
+                senhaPartida.Text,
+                ApplicationConstants.GroupName
+            );
+
+            if (ErrorHandler.HandleServerResponse(response))
+                return;
+
+            RefreshGamesList();
+        }
+
+        // Keep original method name to match the designer file
         private void button2_Click(object sender, EventArgs e)
         {
-            int id = Convert.ToInt32(label11.Text.Split(':')[2]);
-            string retorno = Jogo.Entrar(id, nomeJogador.Text, senhaPartidaEntrar.Text);
-            if (retorno.Contains("ERRO"))
-            {
-                MessageBox.Show(retorno);
+            int gameId = Convert.ToInt32(label11.Text.Split(':')[2]);
+            string response = Jogo.Entrar(gameId, nomeJogador.Text, senhaPartidaEntrar.Text);
+
+            if (ErrorHandler.HandleServerResponse(response))
                 return;
-            }
-            //passando dados para o form2
-            Dictionary<string, string>  valoresJogo = new Dictionary<string, string>();
-            valoresJogo.Add("idPartida", Convert.ToString(id));
-            valoresJogo.Add("nomePartida", label11.Text.Split(':')[1].Trim().Split('\n')[0]);
-            valoresJogo.Add("idJogador", retorno.Split(',')[0]);
-            valoresJogo.Add("nomeJogador", nomeJogador.Text);
-            valoresJogo.Add("senhaJogador", retorno.Split(',')[1]);
 
-            Partida form2 = new Partida(valoresJogo);
-            form2.Show();
-            form2.FormClosed += (s, args) => Application.Exit();
-            form2.ValoresJogo = valoresJogo;
-           //his.Hide();
+            // Prepare game session data
+            Dictionary<string, string> gameSessionData = new Dictionary<string, string>
+            {
+                ["idPartida"] = Convert.ToString(gameId),
+                ["nomePartida"] = label11.Text.Split(':')[1].Trim().Split('\n')[0],
+                ["idJogador"] = response.Split(',')[0],
+                ["nomeJogador"] = nomeJogador.Text,
+                ["senhaJogador"] = response.Split(',')[1]
+            };
+
+            // Launch game session form
+            GameSessionForm gameSessionForm = new GameSessionForm(gameSessionData);
+            gameSessionForm.Show();
+            gameSessionForm.FormClosed += (s, args) => Application.Exit();
+            gameSessionForm.GameSessionData = gameSessionData;
         }
 
-        private void label5_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label12_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label11_Click(object sender, EventArgs e)
-        {
-
-        }
+        // Keep all original event handlers exactly as they were
+        private void button1_Click(object sender, EventArgs e) { }
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e) { }
+        private void label1_Click(object sender, EventArgs e) { }
+        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e) { }
+        private void label2_Click(object sender, EventArgs e) { }
+        private void label3_Click(object sender, EventArgs e) { }
+        private void label5_Click(object sender, EventArgs e) { }
+        private void label6_Click(object sender, EventArgs e) { }
+        private void Form1_Load(object sender, EventArgs e) { }
+        private void label12_Click(object sender, EventArgs e) { }
+        private void label11_Click(object sender, EventArgs e) { }
     }
 }

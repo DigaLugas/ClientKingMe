@@ -1,6 +1,6 @@
 ﻿namespace ClientKingMe
 {
-    partial class Lobby
+    partial class GameLobbyForm
     {
         /// <summary>
         /// Variável de designer necessária.
