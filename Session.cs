@@ -257,6 +257,26 @@ namespace ClientKingMe
                 if (firstLine.Length < 2 || firstLine[0] != ValoresJogo["idJogador"])
                     return; // Not our turn
 
+                // Verificar se houve mudança de fase
+                string newGamePhase = firstLine.Length >= 4 ? firstLine[3] : ApplicationConstants.GamePhases.Positioning;
+                if (newGamePhase != currentGamePhase && currentGamePhase != string.Empty)
+                {
+                    // Parar o autoplay quando mudar de fase
+                    autoPlayEnabled = false;
+                    toggleAutoPlayButton.Text = "Ativar Auto-Play";
+                    aiStatusLabel.Text = "AI: Inativo (Fase mudou)";
+                    aiStatusLabel.ForeColor = Color.DarkGray;
+                    aiTimer.Stop();
+
+                    // Notificar o usuário
+                    MessageBox.Show($"Auto-play parado: Fase mudou de {gamePhaseNames[currentGamePhase]} para {gamePhaseNames[newGamePhase]}.",
+                        "Mudança de Fase", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // Atualizar a fase atual
+                    currentGamePhase = newGamePhase;
+                    return;
+                }
+
                 // It's our turn! Execute AI move
                 aiStatusLabel.Text = "AI: Pensando...";
                 aiStatusLabel.ForeColor = Color.Blue;
@@ -325,7 +345,7 @@ namespace ClientKingMe
                             continue;
 
                         string[] parts = line.Split(',');
-                        if (parts.Length >= 2)
+                        if (parts.Length >= 2 && parts[1].Length > 0)
                         {
                             char characterCode = parts[1][0];
                             charactersOnBoard.Add(characterCode);
@@ -353,6 +373,11 @@ namespace ClientKingMe
                 {
                     aiStatusLabel.Text = "AI: Sem movimentos";
                     aiStatusLabel.ForeColor = Color.Orange;
+
+                    // CORREÇÃO: Adicionar log detalhado para debug do problema
+                    string debugInfo = $"Fase: {currentGamePhase}, Personagens disponíveis: {availableCharacters.Count}, " +
+                                       $"BoardState lines: {currentBoardState.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Length}";
+                    ErrorHandler.ShowWarning($"O AI não conseguiu determinar um movimento. Info: {debugInfo}");
                     return;
                 }
 
