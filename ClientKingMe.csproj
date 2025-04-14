@@ -66,6 +66,13 @@
     <Compile Include="Lobby.Designer.cs">
       <DependentUpon>Lobby.cs</DependentUpon>
     </Compile>
+    <Compile Include="MCTS\GameStateAdapter.cs" />
+    <Compile Include="MCTS\GameRules.cs" />
+    <Compile Include="MCTS\MCTSAgent.cs" />
+    <Compile Include="MCTS\MCTSNode.cs" />
+    <Compile Include="MCTS\MCTSParallel.cs" />
+    <Compile Include="MCTS\Model.cs" />
+    <Compile Include="MCTS\Program.cs" />
     <Compile Include="Session.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +92,9 @@
     <Compile Include="GameBoard.cs" />
     <EmbeddedResource Include="Lobby.resx">
       <DependentUpon>Lobby.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MCTS\GameStateAdapter.resx">
+      <DependentUpon>GameStateAdapter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Session.resx">
       <DependentUpon>Session.cs</DependentUpon>

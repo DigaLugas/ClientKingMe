@@ -18,11 +18,9 @@ namespace ClientKingMe
             {'E', "Eduardo Takeo"},
             {'G', "Guilherme Rey"},
             {'H', "Heredia"},
-            {'J', "Joker"},
             {'K', "Karin"},
             {'L', "Leonardo Takuno"},
             {'M', "Mario Toledo"},
-            {'P', "Pedreiro"},
             {'Q', "Quintas"},
             {'R', "Ranulfo"},
             {'T', "Toshio"},
@@ -42,6 +40,13 @@ namespace ClientKingMe
         private readonly DesignerConfigurator designer;
         private readonly GameBoard gameBoard;
 
+        // MCTS components
+        private readonly MCTSAgent mctsAgent;
+        private readonly GameStateAdapter gameStateAdapter;
+        private List<char> availableCharacters = new List<char>();
+        private string currentBoardState = string.Empty;
+        private string currentGamePhase = ApplicationConstants.GamePhases.Positioning;
+
         public GameSessionForm(Dictionary<string, string> valoresJogo)
         {
             this.designer = new DesignerConfigurator();
@@ -60,6 +65,135 @@ namespace ClientKingMe
 
             // Initialize game board
             gameBoard = new GameBoard(pictureBox1);
+
+            // Initialize MCTS components
+            mctsAgent = new MCTSAgent(int.Parse(ValoresJogo["idJogador"]), 2000);
+            gameStateAdapter = new GameStateAdapter();
+
+            // Add AI move button
+            Button aiMoveButton = new Button
+            {
+                Text = "AI Jogar",
+                Location = new Point(button3.Location.X, button3.Location.Y + button3.Height + 10),
+                Size = button3.Size
+            };
+            aiMoveButton.Click += AiMoveButton_Click;
+            this.Controls.Add(aiMoveButton);
+
+            DesignerConfigurator.StyleButton(aiMoveButton, designer.primaryColor, designer.accentColor, 10);
+        }
+
+        private void AiMoveButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Check if it's our turn
+                string turnInfo = Jogo.VerificarVez(Convert.ToInt32(ValoresJogo["idPartida"]));
+                if (ErrorHandler.HandleServerResponse(turnInfo))
+                    return;
+
+                string[] lines = turnInfo.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                if (lines.Length == 0)
+                    return;
+
+                string[] firstLine = lines[0].Split(',');
+                if (firstLine.Length < 2 || firstLine[0] != ValoresJogo["idJogador"])
+                {
+                    ErrorHandler.ShowWarning("Não é sua vez de jogar.");
+                    return;
+                }
+
+                // Update game state data
+                currentBoardState = turnInfo;
+                if (firstLine.Length >= 4)
+                {
+                    currentGamePhase = firstLine[3];
+                }
+
+                // Get available characters if needed
+                if (availableCharacters.Count == 0)
+                {
+                    string charactersData = Jogo.ListarCartas(
+                        Convert.ToInt32(ValoresJogo["idJogador"]),
+                        ValoresJogo["senhaJogador"]
+                    );
+
+                    if (!ErrorHandler.HandleServerResponse(charactersData))
+                    {
+                        availableCharacters = charactersData.ToCharArray().ToList();
+                    }
+                }
+
+                // Create game state for MCTS
+                var gameState = gameStateAdapter.CreateGameState(
+                    ValoresJogo,
+                    currentGamePhase,
+                    availableCharacters,
+                    currentBoardState
+                );
+
+                // Get best move from MCTS
+                var bestMove = mctsAgent.MakeMove(gameState);
+                if (bestMove == null)
+                {
+                    ErrorHandler.ShowWarning("O AI não conseguiu determinar um movimento.");
+                    return;
+                }
+
+                // Convert move to client format
+                string moveData = gameStateAdapter.ConvertMoveToClientFormat(bestMove);
+
+                // Execute the move
+                string response = string.Empty;
+
+                switch (currentGamePhase)
+                {
+                    case ApplicationConstants.GamePhases.Positioning:
+                        string[] parts = moveData.Split(',');
+                        if (parts.Length >= 2)
+                        {
+                            int floor = int.Parse(parts[0]);
+                            string character = parts[1];
+                            response = Jogo.ColocarPersonagem(
+                                Convert.ToInt32(ValoresJogo["idJogador"]),
+                                ValoresJogo["senhaJogador"],
+                                floor,
+                                character
+                            );
+                        }
+                        break;
+
+                    case ApplicationConstants.GamePhases.Promotion:
+                        response = Jogo.Promover(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            moveData
+                        );
+                        break;
+
+                    case ApplicationConstants.GamePhases.Voting:
+                        response = Jogo.Votar(
+                            Convert.ToInt32(ValoresJogo["idJogador"]),
+                            ValoresJogo["senhaJogador"],
+                            moveData
+                        );
+                        break;
+                }
+
+                if (!ErrorHandler.HandleServerResponse(response))
+                {
+                    // Update the view after move
+                    button4_Click(null, EventArgs.Empty);
+
+                    // Show move description
+                    string moveDescription = mctsAgent.GetMoveDescription(gameState, bestMove);
+                    MessageBox.Show($"AI move: {moveDescription}", "AI Move", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.ShowError($"Erro ao fazer movimento AI: {ex.Message}");
+            }
         }
 
         private void ApplyCustomStyling()
@@ -84,6 +218,8 @@ namespace ClientKingMe
             // Style buttons - keeping original names
             DesignerConfigurator.StyleButton(button1, designer.primaryColor, designer.accentColor, 10);
             DesignerConfigurator.StyleButton(button2, designer.primaryColor, designer.accentColor, 10);
+            DesignerConfigurator.StyleButton(button3, designer.primaryColor, designer.accentColor, 10);
+            DesignerConfigurator.StyleButton(button4, designer.primaryColor, designer.accentColor, 10);
         }
 
         // Keep original method name to match the designer file
@@ -108,7 +244,12 @@ namespace ClientKingMe
             if (ErrorHandler.HandleServerResponse(response))
                 return;
 
+            // Store available characters for AI
+            availableCharacters = response.ToCharArray().ToList();
+
+            // Populate character list
             UpdateCharacterList(response);
+            UpdateCharacterListBox(response);
         }
 
         private void UpdateCharacterList(string charactersData)
@@ -123,6 +264,33 @@ namespace ClientKingMe
             }
         }
 
+        private void UpdateCharacterListBox(string charactersData)
+        {
+            listBox1.Items.Clear();
+            foreach (char c in charactersData.ToCharArray())
+            {
+                if (characterNames.ContainsKey(c))
+                {
+                    listBox1.Items.Add($"{c} - {characterNames[c]}");
+                }
+            }
+
+            if (listBox1.Items.Count > 0)
+            {
+                listBox1.SelectedIndex = 0;
+            }
+
+            // Also ensure the floor combobox is populated
+            if (comboBox1.Items.Count == 0)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    comboBox1.Items.Add(i);
+                }
+                comboBox1.SelectedIndex = 0;
+            }
+        }
+
         // Keep original method name to match the designer file
         private void button4_Click(object sender, EventArgs e)
         {
@@ -133,6 +301,9 @@ namespace ClientKingMe
 
             if (ErrorHandler.HandleServerResponse(response))
                 return;
+
+            // Store current board state for AI
+            currentBoardState = response;
 
             // Update game board visualization
             gameBoard.ProcessBoardUpdate(response);
@@ -156,6 +327,7 @@ namespace ClientKingMe
             // Update phase information
             if (firstLine.Length >= 4 && gamePhaseNames.ContainsKey(firstLine[3]))
             {
+                currentGamePhase = firstLine[3];
                 label9.Text = "Estamos na fase de " + gamePhaseNames[firstLine[3]];
             }
 
@@ -178,7 +350,7 @@ namespace ClientKingMe
             if (turnData.Length >= 4 && turnData[3] == ApplicationConstants.GamePhases.Voting)
             {
                 var voteResult = MessageBox.Show(
-                    "Voce aceita o persoagem para ser o rei?",
+                    "Você aceita o personagem para ser o rei?",
                     "Votação",
                     MessageBoxButtons.YesNo
                 );
@@ -188,6 +360,9 @@ namespace ClientKingMe
                     ValoresJogo["senhaJogador"],
                     voteResult == DialogResult.Yes ? "s" : "n"
                 );
+
+                // Refresh the board after voting
+                button4_Click(null, EventArgs.Empty);
             }
         }
 
