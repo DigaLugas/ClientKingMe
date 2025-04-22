@@ -59,7 +59,6 @@ namespace ClientKingMe
             InitializeComponent();
             ApplyCustomStyling();
 
-            //label7.Text = "";
             this.ValoresJogo = valoresJogo;
             label8.Text = "";
 
@@ -407,39 +406,7 @@ namespace ClientKingMe
                 }
             }
 
-            // Check if it's current player's turn
-            if (firstLine.Length >= 2 && firstLine[0] == ValoresJogo["idJogador"])
-            {
-                HandlePlayerTurn(firstLine);
-            }
-            else
-            {
-                DisplayCurrentPlayerTurn(firstLine[0]);
-            }
-        }
-
-        private void HandlePlayerTurn(string[] turnData)
-        {
-            label8.Text = $"ID: {ValoresJogo["idJogador"]}, sua vez {ValoresJogo["nomeJogador"]}";
-
-            // Handle voting phase
-            if (turnData.Length >= 4 && turnData[3] == ApplicationConstants.GamePhases.Voting)
-            {
-                var voteResult = MessageBox.Show(
-                    "Você aceita o personagem para ser o rei?",
-                    "Votação",
-                    MessageBoxButtons.YesNo
-                );
-
-                Jogo.Votar(
-                    Convert.ToInt32(ValoresJogo["idJogador"]),
-                    ValoresJogo["senhaJogador"],
-                    voteResult == DialogResult.Yes ? "s" : "n"
-                );
-
-                // Refresh the board after voting
-                updateGameBoard();
-            }
+            DisplayCurrentPlayerTurn(firstLine[0]);
         }
 
         private void DisplayCurrentPlayerTurn(string currentPlayerId)

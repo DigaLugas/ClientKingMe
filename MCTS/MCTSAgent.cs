@@ -23,6 +23,20 @@ namespace ClientKingMe
 
         public MCTS.GameMove MakeMove(MCTS.GameState gameState)
         {
+            if (gameState.CurrentPhase == MCTS.GameState.GamePhase.Voting)
+            {
+                var player = gameState.Players.FirstOrDefault(p => p.Id == _playerId);
+                var throneCharacter = gameState.Characters.FirstOrDefault(c => c.CurrentFloor == MCTS.Floor.Throne);
+
+                if (throneCharacter != null && player != null || !player.HasNoVotes())
+                {
+                    if (player.FavoriteCharacters.Contains(throneCharacter.Id))
+                        return new MCTS.VotingMove(true);
+                    else
+                        return new MCTS.VotingMove(false);
+                }
+            }
+
             var mcts = new MCTS.MCTSParallel(_gameRules, _maxIterations, 1.414, _numThreads);
             return mcts.FindBestMove(gameState, _playerId);
         }
