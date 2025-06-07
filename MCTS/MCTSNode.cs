@@ -20,13 +20,14 @@ namespace MCTS
 
         public double UCB1Score(double explorationParameter)
         {
-            if (Visits == 0)
+            if (Visits == 0 || Parent == null)
                 return double.MaxValue;
 
             double exploitation = TotalScore / Visits;
             double exploration = Math.Sqrt(2 * Math.Log(Parent.Visits) / Visits);
             return exploitation + explorationParameter * exploration;
         }
+
 
         public MCTSNode(GameState state, MCTSNode parent = null, GameMove move = null, int playerId = 0)
         {

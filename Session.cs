@@ -1,4 +1,7 @@
-﻿using KingMeServer;
+﻿// ============================
+// File: Session.cs (refatorado para C# 7.3)
+// ============================
+using KingMeServer;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -9,77 +12,31 @@ namespace ClientKingMe
 {
     public partial class GameSessionForm : Form
     {
-        private readonly Dictionary<char, string> characterNames = new Dictionary<char, string>()
-        {
-            {'A', "Adilson Konrad"},
-            {'B', "Beatriz Paiva"},
-            {'C', "Claro"},
-            {'D', "Douglas Baquiao"},
-            {'E', "Eduardo Takeo"},
-            {'G', "Guilherme Rey"},
-            {'H', "Heredia"},
-            {'K', "Karin"},
-            {'L', "Leonardo Takuno"},
-            {'M', "Mario Toledo"},
-            {'Q', "Quintas"},
-            {'R', "Ranulfo"},
-            {'T', "Toshio"},
-        };
-
-        private readonly Dictionary<string, string> gamePhaseNames = new Dictionary<string, string>()
-        {
-            {"S", "posicionamento"},
-            {"P", "promoção"},
-            {"V", "Votação"},
-        };
-
-        // Renamed to be more descriptive, but kept original property
         public Dictionary<string, string> ValoresJogo { get; set; }
         public Dictionary<string, string> GameSessionData { get; internal set; }
 
-        private readonly DesignerConfigurator designer;
+        private readonly DesignerConfigurator designer = new DesignerConfigurator();
         private readonly GameBoard gameBoard;
-
-        // MCTS components
         private readonly MCTSAgent mctsAgent;
-        private readonly GameStateAdapter gameStateAdapter;
+        private readonly GameStateAdapter gameStateAdapter = new GameStateAdapter();
+
         private List<char> availableCharacters = new List<char>();
         private string currentBoardState = string.Empty;
         private string currentGamePhase = ApplicationConstants.GamePhases.Positioning;
 
-        private System.Windows.Forms.Timer aiTimer;
+        private readonly Timer aiTimer;
         private bool autoPlayEnabled = false;
-        private Label aiStatusLabel;
-        private const int AI_CHECK_INTERVAL = 5000;
-
+        private readonly Label aiStatusLabel;
 
         public GameSessionForm(Dictionary<string, string> valoresJogo)
         {
-            this.designer = new DesignerConfigurator();
             InitializeComponent();
             ApplyCustomStyling();
+            ValoresJogo = valoresJogo;
+            ExibirInfoJogador();
 
-            this.ValoresJogo = valoresJogo;
-            label8.Text = "";
-
-            aiTimer = new System.Windows.Forms.Timer();
-            aiTimer.Interval = AI_CHECK_INTERVAL;
-            aiTimer.Tick += AiTimer_Tick;
-
-
-            // Set player information labels
-            label3.Text = ValoresJogo["nomePartida"];
-            label4.Text = $"Id: {ValoresJogo["idJogador"]}";
-            label5.Text = $"Nome: {ValoresJogo["nomeJogador"]}";
-            label6.Text = $"Senha: {ValoresJogo["senhaJogador"]}";
-
-            // Initialize game board
             gameBoard = new GameBoard(pictureBox1);
-
-            // Initialize MCTS components
-            mctsAgent = new MCTSAgent(int.Parse(ValoresJogo["idJogador"]), 2000);
-            gameStateAdapter = new GameStateAdapter();
-
+            mctsAgent = new MCTSAgent(int.Parse(valoresJogo["idJogador"]), 2000);
 
             aiStatusLabel = new Label
             {
@@ -88,204 +45,94 @@ namespace ClientKingMe
                 AutoSize = true,
                 ForeColor = Color.DarkGray
             };
-            this.Controls.Add(aiStatusLabel);
+            Controls.Add(aiStatusLabel);
 
+            aiTimer = new Timer { Interval = ApplicationConstants.AI_CHECK_INTERVAL };
+            aiTimer.Tick += AiTimer_Tick;
         }
+
+        private void ExibirInfoJogador()
+        {
+            label3.Text = ValoresJogo["nomePartida"];
+            label4.Text = "Id: " + ValoresJogo["idJogador"];
+            label5.Text = "Nome: " + ValoresJogo["nomeJogador"];
+            label6.Text = "Senha: " + ValoresJogo["senhaJogador"];
+            label8.Text = "";
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
             autoPlayEnabled = !autoPlayEnabled;
+            button2.Text = autoPlayEnabled ? "Desativar Auto-Play" : "Ativar Auto-Play";
+            aiStatusLabel.Text = autoPlayEnabled ? "AI: Monitorando" : "AI: Inativo";
+            aiStatusLabel.ForeColor = autoPlayEnabled ? Color.Green : Color.DarkGray;
 
             if (autoPlayEnabled)
             {
-                button2.Text = "Desativar Auto-Play";
-                aiStatusLabel.Text = "AI: Monitorando";
-                aiStatusLabel.ForeColor = Color.Green;
                 aiTimer.Start();
-
-                // Check immediately if it's our turn
                 AiTimer_Tick(null, EventArgs.Empty);
             }
-            else
-            {
-                button2.Text = "Ativar Auto-Play";
-                aiStatusLabel.Text = "AI: Inativo";
-                aiStatusLabel.ForeColor = Color.DarkGray;
-                aiTimer.Stop();
-            }
+            else aiTimer.Stop();
         }
 
         private void AiTimer_Tick(object sender, EventArgs e)
         {
-            if (!autoPlayEnabled)
-                return;
+            if (!autoPlayEnabled) return;
 
             try
             {
-                // Check if it's our turn
-                string turnInfo = Jogo.VerificarVez(Convert.ToInt32(ValoresJogo["idPartida"]));
-                if (ErrorHandler.HandleServerResponse(turnInfo))
-                    return;
+                var turnInfo = Utils.Server.SafeServerCall(() => Jogo.VerificarVez(int.Parse(ValoresJogo["idPartida"])));
+                if (turnInfo == null || !Utils.Game.IsMyTurn(turnInfo, ValoresJogo["idJogador"])) return;
 
-                string[] lines = turnInfo.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                if (lines.Length == 0)
-                    return;
-
-                string[] firstLine = lines[0].Split(',');
-                if (firstLine.Length < 2 || firstLine[0] != ValoresJogo["idJogador"])
-                    return; // Not our turn
-
-                // It's our turn! Execute AI move
                 aiStatusLabel.Text = "AI: Pensando...";
                 aiStatusLabel.ForeColor = Color.Blue;
 
-                // Update UI to reflect current game state
-                currentBoardState = turnInfo;
-                if (firstLine.Length >= 4)
-                {
-                    currentGamePhase = firstLine[3];
-                }
+                AtualizarEstadoDoJogo(turnInfo);
 
-                // Make sure we have available characters
-                if (availableCharacters.Count == 0)
-                {
-                    string charactersData = Jogo.ListarCartas(
-                        Convert.ToInt32(ValoresJogo["idJogador"]),
-                        ValoresJogo["senhaJogador"]
-                    );
-
-                    if (!ErrorHandler.HandleServerResponse(charactersData))
-                    {
-                        availableCharacters = charactersData.ToCharArray().ToList();
-                    }
-                }
-
-                // Execute AI move with a slight delay to make it visible in the UI
-                this.BeginInvoke(new Action(() => {
-                    ExecuteAiMove();
-                }));
+                BeginInvoke((Action)(() => ExecuteAiMove()));
             }
             catch (Exception ex)
             {
                 aiStatusLabel.Text = "AI: Erro";
                 aiStatusLabel.ForeColor = Color.Red;
-                ErrorHandler.ShowError($"Erro no timer AI: {ex.Message}");
+                ErrorHandler.ShowError("Erro no timer AI: " + ex.Message);
             }
+        }
+
+        private void AtualizarEstadoDoJogo(string turnInfo)
+        {
+            currentBoardState = turnInfo;
+            currentGamePhase = Utils.Game.GetCurrentPhase(turnInfo);
+
+            if (currentGamePhase == ApplicationConstants.GamePhases.Positioning)
+                availableCharacters = Utils.Game.GetAvailableCharacters(currentBoardState);
         }
 
         private void ExecuteAiMove()
         {
             try
             {
-                // Obter a lista atualizada de personagens já colocados no tabuleiro
-                string boardState = Jogo.VerificarVez(
-                    Convert.ToInt32(ValoresJogo["idPartida"])
-                );
-
-                if (ErrorHandler.HandleServerResponse(boardState))
-                    return;
-
-                currentBoardState = boardState;
-
-                // Na fase de posicionamento, precisamos obter todos os personagens
-                // que ainda não estão no tabuleiro
-                if (currentGamePhase == ApplicationConstants.GamePhases.Positioning)
-                {
-                    // Dicionário para armazenar os personagens já colocados no tabuleiro
-                    var charactersOnBoard = new HashSet<char>();
-
-                    string[] lines = boardState.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string line in lines)
-                    {
-                        if (string.IsNullOrWhiteSpace(line))
-                            continue;
-
-                        string[] parts = line.Split(',');
-                        if (parts.Length >= 2 && parts[1].Length > 0)
-                        {
-                            char characterCode = parts[1][0];
-                            charactersOnBoard.Add(characterCode);
-                        }
-                    }
-
-                    // Lista de todos os personagens disponíveis
-                    var allCharacters = new List<char>() { 'A', 'B', 'C', 'D', 'E', 'G', 'H', 'K', 'L', 'M', 'Q', 'R', 'T' };
-
-                    // Personagens disponíveis são todos que ainda não estão no tabuleiro
-                    availableCharacters = allCharacters.Where(c => !charactersOnBoard.Contains(c)).ToList();
-                }
-
-                // Create game state for MCTS
                 var gameState = gameStateAdapter.CreateGameState(
-                    ValoresJogo,
-                    currentGamePhase,
-                    availableCharacters,
-                    currentBoardState
-                );
+                    ValoresJogo, currentGamePhase, availableCharacters, currentBoardState);
 
-                // Get best move from MCTS
                 var bestMove = mctsAgent.MakeMove(gameState);
                 if (bestMove == null)
                 {
                     aiStatusLabel.Text = "AI: Sem movimentos";
                     aiStatusLabel.ForeColor = Color.Orange;
-
-                    // CORREÇÃO: Adicionar log detalhado para debug do problema
-                    string debugInfo = $"Fase: {currentGamePhase}, Personagens disponíveis: {availableCharacters.Count}, " +
-                                       $"BoardState lines: {currentBoardState.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).Length}";
-                    ErrorHandler.ShowWarning($"O AI não conseguiu determinar um movimento. Info: {debugInfo}");
+                    ErrorHandler.ShowWarning("O AI não conseguiu determinar um movimento.");
                     return;
                 }
 
-                // Convert move to client format
                 string moveData = gameStateAdapter.ConvertMoveToClientFormat(bestMove);
                 string moveDescription = mctsAgent.GetMoveDescription(gameState, bestMove);
 
-                // Display what the AI is doing
-                aiStatusLabel.Text = $"AI: {moveDescription}";
+                aiStatusLabel.Text = "AI: " + moveDescription;
 
-                // Execute the move
-                string response = string.Empty;
-
-                switch (currentGamePhase)
+                var response = ExecutarMovimento(moveData);
+                if (response != null)
                 {
-                    case ApplicationConstants.GamePhases.Positioning:
-                        string[] parts = moveData.Split(',');
-                        if (parts.Length >= 2)
-                        {
-                            int floor = int.Parse(parts[0]);
-                            string character = parts[1];
-                            response = Jogo.ColocarPersonagem(
-                                Convert.ToInt32(ValoresJogo["idJogador"]),
-                                ValoresJogo["senhaJogador"],
-                                floor,
-                                character
-                            );
-                        }
-                        break;
-
-                    case ApplicationConstants.GamePhases.Promotion:
-                        response = Jogo.Promover(
-                            Convert.ToInt32(ValoresJogo["idJogador"]),
-                            ValoresJogo["senhaJogador"],
-                            moveData
-                        );
-                        break;
-
-                    case ApplicationConstants.GamePhases.Voting:
-                        response = Jogo.Votar(
-                            Convert.ToInt32(ValoresJogo["idJogador"]),
-                            ValoresJogo["senhaJogador"],
-                            moveData
-                        );
-                        break;
-                }
-
-                if (!ErrorHandler.HandleServerResponse(response))
-                {
-                    // Update the view after move
-                    updateGameBoard();
-
-                    // Indicate success
+                    AtualizarTabuleiro();
                     aiStatusLabel.Text = "AI: Movimento concluído";
                     aiStatusLabel.ForeColor = Color.Green;
                 }
@@ -299,138 +146,117 @@ namespace ClientKingMe
             {
                 aiStatusLabel.Text = "AI: Erro";
                 aiStatusLabel.ForeColor = Color.Red;
-                ErrorHandler.ShowError($"Erro ao fazer movimento AI: {ex.Message}");
+                ErrorHandler.ShowError("Erro ao fazer movimento AI: " + ex.Message);
             }
         }
 
-        // Add a method to handle form closing and cleanup
+        private string ExecutarMovimento(string moveData)
+        {
+            int idJogador = int.Parse(ValoresJogo["idJogador"]);
+            string senha = ValoresJogo["senhaJogador"];
+
+            if (currentGamePhase == ApplicationConstants.GamePhases.Positioning)
+            {
+                return Utils.Server.SafeServerCall(() =>
+                {
+                    var parts = moveData.Split(',');
+                    if (parts.Length >= 2)
+                        return Jogo.ColocarPersonagem(idJogador, senha, int.Parse(parts[0]), parts[1]);
+                    return null;
+                });
+            }
+            else if (currentGamePhase == ApplicationConstants.GamePhases.Promotion)
+            {
+                return Utils.Server.SafeServerCall(() => Jogo.Promover(idJogador, senha, moveData));
+            }
+            else if (currentGamePhase == ApplicationConstants.GamePhases.Voting)
+            {
+                return Utils.Server.SafeServerCall(() => Jogo.Votar(idJogador, senha, moveData));
+            }
+
+            return null;
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            // Stop the timer to prevent issues
             if (aiTimer != null)
             {
                 aiTimer.Stop();
                 aiTimer.Dispose();
             }
-
             base.OnFormClosing(e);
         }
+
         private void ApplyCustomStyling()
         {
-            // Style labels
-            Label[] labelsToStyle = {
-                label1, label2, label3, label4,
-                label5, label6, label8, label9
-            };
+            Label[] labels = { label1, label2, label3, label4, label5, label6, label8, label9 };
+            int[] sizes = { 13, 13, 10, 10, 10, 10, 9, 9 };
 
-            int[] fontSizes = { 13, 13, 10, 10, 10, 10, 9, 9 };
-
-            for (int i = 0; i < labelsToStyle.Length; i++)
+            for (int i = 0; i < labels.Length; i++)
             {
-                DesignerConfigurator.StyleLabel(
-                    labelsToStyle[i],
-                    designer.primaryColor,
-                    fontSizes[i]
-                );
+                DesignerConfigurator.StyleLabel(labels[i], designer.primaryColor, sizes[i]);
             }
 
-            // Style buttons - keeping original names
             DesignerConfigurator.StyleButton(button1, designer.primaryColor, designer.accentColor, 10);
             DesignerConfigurator.StyleButton(button2, designer.primaryColor, designer.accentColor, 10);
         }
 
-        // Keep original method name to match the designer file
         private void button1_Click(object sender, EventArgs e)
         {
-            string response = Jogo.Iniciar(
-                Convert.ToInt32(ValoresJogo["idJogador"]),
-                ValoresJogo["senhaJogador"]
-            );
-
-            ErrorHandler.HandleServerResponse(response);
+            Utils.Server.SafeServerCall(() => Jogo.Iniciar(
+                int.Parse(ValoresJogo["idJogador"]), ValoresJogo["senhaJogador"]));
         }
 
-        // Keep original method name to match the designer file
-
-        // Método para atualizar apenas a exibição da carta do jogador
-        
-        // Keep original method name to match the designer file
-        private void updateGameBoard()
+        private void AtualizarTabuleiro()
         {
             label8.Text = "";
-            string response = Jogo.VerificarVez(
-                Convert.ToInt32(ValoresJogo["idPartida"])
-            );
+            var response = Utils.Server.SafeServerCall(() =>
+                Jogo.VerificarVez(int.Parse(ValoresJogo["idPartida"])));
 
-            if (ErrorHandler.HandleServerResponse(response))
-                return;
+            if (response == null) return;
 
-            // Store current board state for AI
             currentBoardState = response;
-
-            // Update game board visualization
             gameBoard.ProcessBoardUpdate(response);
-
-            // Process turn information
-            ProcessTurnInformation(response);
+            ProcessarTurno(response);
         }
 
-        private void ProcessTurnInformation(string response)
+        private void ProcessarTurno(string response)
         {
-            string[] lines = response.Split(
-                new[] { "\r\n" },
-                StringSplitOptions.RemoveEmptyEntries
-            );
+            var lines = response.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length == 0) return;
 
-            if (lines.Length == 0)
-                return;
-
-            string[] firstLine = lines[0].Split(',');
-
-            // Update phase information
-            if (firstLine.Length >= 4 && gamePhaseNames.ContainsKey(firstLine[3]))
+            var firstLine = lines[0].Split(',');
+            if (firstLine.Length >= 4)
             {
-                string previousPhase = currentGamePhase;
+                string faseAnterior = currentGamePhase;
                 currentGamePhase = firstLine[3];
-                label9.Text = "Estamos na fase de " + gamePhaseNames[firstLine[3]];
 
-                // Se entramos na fase de posicionamento, atualizar carta do jogador
-                if (currentGamePhase == ApplicationConstants.GamePhases.Positioning &&
-                    previousPhase != ApplicationConstants.GamePhases.Positioning)
+                if (ApplicationConstants.GamePhases.Names.ContainsKey(currentGamePhase))
+                    label9.Text = "Estamos na fase de " + ApplicationConstants.GamePhases.Names[currentGamePhase];
+
+                if (currentGamePhase == ApplicationConstants.GamePhases.Positioning && faseAnterior != ApplicationConstants.GamePhases.Positioning)
                 {
-                    // Buscar cartas do jogador
-                    string charactersData = Jogo.ListarCartas(
-                        Convert.ToInt32(ValoresJogo["idJogador"]),
-                        ValoresJogo["senhaJogador"]
-                    );
+                    Utils.Server.SafeServerCall(() =>
+                        Jogo.ListarCartas(int.Parse(ValoresJogo["idJogador"]), ValoresJogo["senhaJogador"]));
                 }
             }
 
-            DisplayCurrentPlayerTurn(firstLine[0]);
+            ExibirTurnoJogadorAtual(firstLine[0]);
         }
 
-        private void DisplayCurrentPlayerTurn(string currentPlayerId)
+        private void ExibirTurnoJogadorAtual(string idAtual)
         {
-            var playersData = Jogo.ListarJogadores(
-                Convert.ToInt32(ValoresJogo["idPartida"])
-            );
+            var jogadores = Jogo.ListarJogadores(int.Parse(ValoresJogo["idPartida"])).Split('\n');
 
-            var players = playersData.Split('\n');
-
-            foreach (var player in players)
+            foreach (var j in jogadores)
             {
-                if (string.IsNullOrWhiteSpace(player))
-                    continue;
-
-                string[] playerDetails = player.Split(',');
-
-                if (playerDetails.Length >= 2 && playerDetails[0] == currentPlayerId)
+                var dados = j.Split(',');
+                if (dados.Length >= 2 && dados[0] == idAtual)
                 {
-                    label8.Text = $"ID: {playerDetails[0]}, vez do {playerDetails[1]}";
+                    label8.Text = "ID: " + dados[0] + ", vez do " + dados[1];
                     break;
                 }
             }
         }
-
     }
 }

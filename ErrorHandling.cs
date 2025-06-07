@@ -1,4 +1,7 @@
-﻿using System;
+﻿// ============================
+// File: ErrorHandling.cs (refatorado)
+// ============================
+using System;
 using System.Windows.Forms;
 
 namespace ClientKingMe
@@ -9,47 +12,28 @@ namespace ClientKingMe
         {
             if (string.IsNullOrEmpty(response))
             {
-                ShowError("Erro: Resposta do servidor está vazia.");
+                Show("Erro: Resposta do servidor está vazia.", "Erro", MessageBoxIcon.Error);
                 return true;
             }
 
             if (response.StartsWith("ERRO"))
             {
-                ShowError(response);
+                Show(response, "Erro", MessageBoxIcon.Error);
                 return true;
             }
 
             return false;
         }
 
-        public static void ShowError(string message)
-        {
-            MessageBox.Show(
-                message,
-                "Erro",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Error
-            );
-        }
+        public static void ShowError(string message) => Show(message, "Erro", MessageBoxIcon.Error);
 
-        public static void ShowWarning(string message)
-        {
-            MessageBox.Show(
-                message,
-                "Aviso",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning
-            );
-        }
+        public static void ShowWarning(string message) => Show(message, "Aviso", MessageBoxIcon.Warning);
 
-        public static void ShowInfo(string message)
+        public static void ShowInfo(string message) => Show(message, "Informação", MessageBoxIcon.Information);
+
+        private static void Show(string message, string title, MessageBoxIcon icon)
         {
-            MessageBox.Show(
-                message,
-                "Informação",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information
-            );
+            MessageBox.Show(message, title, MessageBoxButtons.OK, icon);
         }
     }
 }

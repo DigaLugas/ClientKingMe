@@ -7,74 +7,38 @@ namespace ClientKingMe
 {
     public class GameStateAdapter
     {
-        private readonly Dictionary<char, string> _characterNames = new Dictionary<char, string>()
-        {
-            {'A', "Adilson Konrad"},
-            {'B', "Beatriz Paiva"},
-            {'C', "Claro"},
-            {'D', "Douglas Baquiao"},
-            {'E', "Eduardo Takeo"},
-            {'G', "Guilherme Rey"},
-            {'H', "Heredia"},
-            {'K', "Karin"},
-            {'L', "Leonardo Takuno"},
-            {'M', "Mario Toledo"},
-            {'Q', "Quintas"},
-            {'R', "Ranulfo"},
-            {'T', "Toshio"},
-        };
-
-        private readonly Dictionary<char, int> _characterMap = new Dictionary<char, int>()
-        {
-            {'A', 0}, {'B', 1}, {'C', 2}, {'D', 3}, {'E', 4},
-            {'G', 5}, {'H', 6}, {'K', 7}, {'L', 8}, {'M', 9},
-            {'Q', 10}, {'R', 11}, {'T', 12}
-        };
+        private readonly MCTS.GameRules _gameRules = new MCTS.GameRules();
 
         public MCTS.GameState CreateGameState(Dictionary<string, string> gameSessionData, string gamePhase, List<char> availableCharacters, string boardState)
         {
-            // Determine número de jogadores (simplificado, ajuste conforme necessário)
-            int numPlayers = 4; // Valor padrão para 4 jogadores
+            int numPlayers = 4;
 
-            // Criar estado do jogo
             var gameState = new MCTS.GameState(numPlayers);
             _gameRules.SetupGame(gameState, numPlayers);
 
-            // Definir jogador atual
             int currentPlayerId = int.Parse(gameSessionData["idJogador"]);
             gameState.CurrentPlayerIndex = currentPlayerId % numPlayers;
 
-            // Definir fase do jogo
             SetGamePhase(gameState, gamePhase);
-
-            // Processar estado do tabuleiro
             ProcessBoardState(gameState, boardState);
-
-            // Processar personagens disponíveis
-            ProcessAvailableCharacters(gameState, availableCharacters);
+            foreach (var character in gameState.Characters)
+            {
+                character.IsEliminated = false;
+            }
 
             return gameState;
         }
 
-        private readonly MCTS.GameRules _gameRules = new MCTS.GameRules();
-
         private void SetGamePhase(MCTS.GameState gameState, string phase)
         {
-            switch (phase)
-            {
-                case ApplicationConstants.GamePhases.Positioning:
-                    gameState.CurrentPhase = MCTS.GameState.GamePhase.Placement;
-                    break;
-                case ApplicationConstants.GamePhases.Promotion:
-                    gameState.CurrentPhase = MCTS.GameState.GamePhase.Ascension;
-                    break;
-                case ApplicationConstants.GamePhases.Voting:
-                    gameState.CurrentPhase = MCTS.GameState.GamePhase.Voting;
-                    break;
-                default:
-                    gameState.CurrentPhase = MCTS.GameState.GamePhase.Placement;
-                    break;
-            }
+            if (phase == ApplicationConstants.GamePhases.Positioning)
+                gameState.CurrentPhase = MCTS.GameState.GamePhase.Placement;
+            else if (phase == ApplicationConstants.GamePhases.Promotion)
+                gameState.CurrentPhase = MCTS.GameState.GamePhase.Ascension;
+            else if (phase == ApplicationConstants.GamePhases.Voting)
+                gameState.CurrentPhase = MCTS.GameState.GamePhase.Voting;
+            else
+                gameState.CurrentPhase = MCTS.GameState.GamePhase.Placement;
         }
 
         private void ProcessBoardState(MCTS.GameState gameState, string boardState)
@@ -83,76 +47,50 @@ namespace ClientKingMe
 
             foreach (string line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
                 string[] parts = line.Split(',');
-
                 if (parts.Length >= 2 && int.TryParse(parts[0], out int floor))
                 {
                     char characterCode = parts[1][0];
-
-                    if (_characterMap.TryGetValue(characterCode, out int characterId))
+                    int characterId;
+                    if (ApplicationConstants.CharacterMap.TryGetValue(characterCode, out characterId))
                     {
                         var character = gameState.Characters.FirstOrDefault(c => c.Id == characterId);
                         if (character != null)
-                        {
                             character.CurrentFloor = (MCTS.Floor)floor;
-                        }
                     }
                 }
             }
         }
 
-        private void ProcessAvailableCharacters(MCTS.GameState gameState, List<char> availableCharacters)
-        {
-            // CORREÇÃO: Na fase de posicionamento, todos os personagens não colocados estão disponíveis
-            // Não limitamos aos personagens da carta do jogador
-
-            // Primeiro, verificamos quais personagens já estão no tabuleiro
-            var charactersOnBoard = new HashSet<int>();
-
-            foreach (var character in gameState.Characters)
-            {
-                if (character.CurrentFloor != MCTS.Floor.Servants)
-                {
-                    charactersOnBoard.Add(character.Id);
-                }
-            }
-
-            // CORREÇÃO: Marca como NÃO eliminados todos os personagens que não estão no tabuleiro
-            // A lógica estava invertida - personagens no tabuleiro não estão eliminados
-            foreach (var character in gameState.Characters)
-            {
-                // Os personagens que NÃO estão no tabuleiro NÃO estão eliminados
-                character.IsEliminated = false;
-            }
-        }
-
         public string ConvertMoveToClientFormat(MCTS.GameMove move)
         {
-            if (move is MCTS.PlacementMove placementMove)
+            if (move is MCTS.PlacementMove)
             {
-                char characterCode = GetCharacterCode(placementMove.CharacterId);
-                int floor = (int)placementMove.TargetFloor;
-                return $"{floor},{characterCode}";
+                var p = (MCTS.PlacementMove)move;
+                return ((int)p.TargetFloor).ToString() + "," + GetCharacterCode(p.CharacterId);
             }
-            else if (move is MCTS.AscensionMove ascensionMove)
+            else if (move is MCTS.AscensionMove)
             {
-                char characterCode = GetCharacterCode(ascensionMove.CharacterId);
-                return characterCode.ToString();
+                var a = (MCTS.AscensionMove)move;
+                return GetCharacterCode(a.CharacterId).ToString();
             }
-            else if (move is MCTS.VotingMove votingMove)
+            else if (move is MCTS.VotingMove)
             {
-                return votingMove.VoteYes ? "s" : "n";
+                var v = (MCTS.VotingMove)move;
+                return v.VoteYes ? "s" : "n";
             }
 
-            return string.Empty;
+            return "";
         }
 
         private char GetCharacterCode(int characterId)
         {
-            return _characterMap.FirstOrDefault(x => x.Value == characterId).Key;
+            foreach (var kvp in ApplicationConstants.CharacterMap)
+            {
+                if (kvp.Value == characterId)
+                    return kvp.Key;
+            }
+            return '?';
         }
     }
 }

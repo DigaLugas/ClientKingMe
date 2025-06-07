@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClientKingMe;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -82,12 +83,36 @@ namespace MCTS
         public int CalculateScore(List<Character> characters)
         {
             int roundScore = 0;
-            foreach (var charId in FavoriteCharacters)
+            foreach (var id in FavoriteCharacters)
             {
-                var character = characters.FirstOrDefault(c => c.Id == charId);
+                var character = characters.FirstOrDefault(c => c.Id == id);
                 if (character != null && !character.IsEliminated)
                 {
-                    roundScore += GetScoreForFloor(character.CurrentFloor);
+                    switch (character.CurrentFloor)
+                    {
+                        case Floor.Throne:
+                            roundScore += ApplicationConstants.ScoreValues.ThroneScore;
+                            break;
+                        case Floor.Nobles:
+                            roundScore += ApplicationConstants.ScoreValues.NoblesScore;
+                            break;
+                        case Floor.Dignitaries:
+                            roundScore += ApplicationConstants.ScoreValues.DignitariesScore;
+                            break;
+                        case Floor.Officers:
+                            roundScore += ApplicationConstants.ScoreValues.OfficersScore;
+                            break;
+                        case Floor.Merchants:
+                            roundScore += ApplicationConstants.ScoreValues.MerchantsScore;
+                            break;
+                        case Floor.Artisans:
+                            roundScore += ApplicationConstants.ScoreValues.ArtisansScore;
+                            break;
+                        case Floor.Servants:
+                        default:
+                            roundScore += ApplicationConstants.ScoreValues.ServantsScore;
+                            break;
+                    }
                 }
             }
             return roundScore;
@@ -97,14 +122,14 @@ namespace MCTS
         {
             switch (floor)
             {
-                case Floor.Throne: return 10;
-                case Floor.Nobles: return 5;
-                case Floor.Dignitaries: return 4;
-                case Floor.Officers: return 3;
-                case Floor.Merchants: return 2;
-                case Floor.Artisans: return 1;
+                case Floor.Throne: return ApplicationConstants.ScoreValues.ThroneScore;
+                case Floor.Nobles: return ApplicationConstants.ScoreValues.NoblesScore;
+                case Floor.Dignitaries: return ApplicationConstants.ScoreValues.DignitariesScore;
+                case Floor.Officers: return ApplicationConstants.ScoreValues.OfficersScore;
+                case Floor.Merchants: return ApplicationConstants.ScoreValues.MerchantsScore;
+                case Floor.Artisans: return ApplicationConstants.ScoreValues.ArtisansScore;
                 case Floor.Servants:
-                default: return 0;
+                default: return ApplicationConstants.ScoreValues.ServantsScore;
             }
         }
     }

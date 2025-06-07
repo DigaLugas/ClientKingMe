@@ -1,4 +1,7 @@
-﻿using System;
+﻿// ============================
+// File: GameBoard.cs (refatorado)
+// ============================
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -7,11 +10,7 @@ namespace ClientKingMe
 {
     internal class GameBoard
     {
-        private readonly Dictionary<int, int> floorPositionMap = new Dictionary<int, int>()
-        {
-            {0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0},
-        };
-
+        private readonly int[] floorPositionMap = new int[6];
         private readonly Dictionary<char, Image> characterImages = new Dictionary<char, Image>();
         private readonly PictureBox boardView;
         private readonly List<PictureBox> charactersOnBoard = new List<PictureBox>();
@@ -27,9 +26,7 @@ namespace ClientKingMe
             try
             {
                 string basePath = ApplicationConstants.ImagesFolderPath;
-                char[] characterCodes = { 'A', 'B', 'C', 'D', 'E', 'G', 'H', 'K', 'L', 'M', 'Q', 'R', 'T' };
-
-                foreach (char code in characterCodes)
+                foreach (char code in ApplicationConstants.AllCharacterCodes)
                 {
                     characterImages[code] = Image.FromFile($"{basePath}/{code}.png");
                 }
@@ -42,10 +39,10 @@ namespace ClientKingMe
 
         public bool PlaceCharacter(char characterCode, int floor)
         {
-            if (floor < 0 || floor > 5 || !characterImages.ContainsKey(characterCode))
+            if (floor < 0 || floor >= floorPositionMap.Length || !characterImages.ContainsKey(characterCode))
                 return false;
 
-            PictureBox characterPic = new PictureBox
+            PictureBox characterPic = new PictureBox()
             {
                 Image = characterImages[characterCode],
                 SizeMode = PictureBoxSizeMode.Zoom,
@@ -85,7 +82,6 @@ namespace ClientKingMe
             }
         }
 
-
         public void ProcessBoardUpdate(string serverResponse)
         {
             ClearBoard();
@@ -94,18 +90,11 @@ namespace ClientKingMe
 
             foreach (string line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
                 string[] parts = line.Split(',');
-
-                if (parts.Length >= 2)
+                if (parts.Length >= 2 && int.TryParse(parts[0], out int floor))
                 {
-                    if (int.TryParse(parts[0], out int floor))
-                    {
-                        char characterCode = parts[1][0];
-                        PlaceCharacter(characterCode, floor);
-                    }
+                    char characterCode = parts[1][0];
+                    PlaceCharacter(characterCode, floor);
                 }
             }
         }

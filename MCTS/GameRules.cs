@@ -10,111 +10,94 @@ namespace MCTS
 
         public List<GameMove> GetValidMoves(GameState state)
         {
-            var moves = new List<GameMove>();
-
             if (state.CurrentPhase == GameState.GamePhase.Placement)
-            {
-                // Fase de colocação de personagens
-                // Considera TODOS os personagens disponíveis, não apenas os da carta
-                var availableCharacters = state.GetCharactersAvailableForPlacement();
-                foreach (var character in availableCharacters)
-                {
-                    // Pode colocar em qualquer andar de 1 a 4 (Artesãos a Dignitários)
-                    for (int floor = 1; floor <= 4; floor++)
-                    {
-                        if (state.CountCharactersOnFloor((Floor)floor) < 4)
-                        {
-                            moves.Add(new PlacementMove(character.Id, (Floor)floor));
-                        }
-                    }
-                }
-            }
+                return GetPlacementMoves(state);
             else if (state.CurrentPhase == GameState.GamePhase.Ascension)
-            {
-                // Fase de ascensão de personagens
-                var availableCharacters = state.GetCharactersAvailableForAscension();
-                foreach (var character in availableCharacters)
-                {
-                    Floor targetFloor = character.CurrentFloor + 1;
-                    if (state.CountCharactersOnFloor(targetFloor) < 4 || targetFloor == Floor.Throne)
-                    {
-                        moves.Add(new AscensionMove(character.Id));
-                    }
-                }
-            }
+                return GetAscensionMoves(state);
             else if (state.CurrentPhase == GameState.GamePhase.Voting)
+                return GetVotingMoves(state);
+
+            return new List<GameMove>();
+        }
+
+        private List<GameMove> GetPlacementMoves(GameState state)
+        {
+            var moves = new List<GameMove>();
+            var available = state.GetCharactersAvailableForPlacement();
+
+            foreach (var character in available)
             {
-                // Fase de votação
-                var player = state.GetCurrentPlayer();
-
-                // Sempre pode votar "Sim"
-                moves.Add(new VotingMove(true));
-
-                // Só pode votar "Não" se tiver votos "Não" disponíveis
-                if (player.HasNoVotes())
+                for (int floor = 1; floor <= 4; floor++)
                 {
-                    moves.Add(new VotingMove(false));
+                    if (state.CountCharactersOnFloor((Floor)floor) < 4)
+                        moves.Add(new PlacementMove(character.Id, (Floor)floor));
                 }
             }
 
             return moves;
         }
 
+        private List<GameMove> GetAscensionMoves(GameState state)
+        {
+            var moves = new List<GameMove>();
+            var available = state.GetCharactersAvailableForAscension();
+
+            foreach (var character in available)
+            {
+                Floor target = character.CurrentFloor + 1;
+                if (state.CountCharactersOnFloor(target) < 4 || target == Floor.Throne)
+                    moves.Add(new AscensionMove(character.Id));
+            }
+
+            return moves;
+        }
+
+        private List<GameMove> GetVotingMoves(GameState state)
+        {
+            var moves = new List<GameMove>();
+            moves.Add(new VotingMove(true));
+            if (state.GetCurrentPlayer().HasNoVotes())
+                moves.Add(new VotingMove(false));
+            return moves;
+        }
+
         public void ApplyMove(GameState state, GameMove move)
         {
-            switch (move)
-            {
-                case PlacementMove placementMove:
-                    ApplyPlacementMove(state, placementMove);
-                    break;
-                case AscensionMove ascensionMove:
-                    ApplyAscensionMove(state, ascensionMove);
-                    break;
-                case VotingMove votingMove:
-                    ApplyVotingMove(state, votingMove);
-                    break;
-                default:
-                    throw new ArgumentException("Tipo de movimento inválido");
-            }
+            if (move is PlacementMove)
+                ApplyPlacementMove(state, (PlacementMove)move);
+            else if (move is AscensionMove)
+                ApplyAscensionMove(state, (AscensionMove)move);
+            else if (move is VotingMove)
+                ApplyVotingMove(state, (VotingMove)move);
+            else
+                throw new ArgumentException("Tipo de movimento inválido");
         }
 
         private void ApplyPlacementMove(GameState state, PlacementMove move)
         {
-            var character = state.Characters.FirstOrDefault(c => c.Id == move.CharacterId);
-            if (character == null || character.IsEliminated || character.CurrentFloor != Floor.Servants)
-                throw new InvalidOperationException("Personagem inválido para colocação");
-
+            var character = state.Characters.First(c => c.Id == move.CharacterId);
             character.CurrentFloor = move.TargetFloor;
             state.CharactersPlacedThisRound++;
             state.NextPlayer();
 
             if (state.IsPlacementPhaseComplete())
-            {
                 state.TransitionToNextPhase();
-            }
         }
 
         private void ApplyAscensionMove(GameState state, AscensionMove move)
         {
-            var character = state.Characters.FirstOrDefault(c => c.Id == move.CharacterId);
-            if (character == null || character.IsEliminated)
-                throw new InvalidOperationException("Personagem inválido para ascensão");
+            var character = state.Characters.First(c => c.Id == move.CharacterId);
+            Floor target = character.CurrentFloor + 1;
 
-            Floor targetFloor = character.CurrentFloor + 1;
-            if (targetFloor != Floor.Throne && state.CountCharactersOnFloor(targetFloor) >= 4)
+            if (target != Floor.Throne && state.CountCharactersOnFloor(target) >= 4)
                 throw new InvalidOperationException("Não há espaço no andar de destino");
 
-            character.CurrentFloor = targetFloor;
+            character.CurrentFloor = target;
 
-            if (targetFloor == Floor.Throne)
-            {
-                // Se um personagem chega ao trono, vamos para fase de votação
+            if (target == Floor.Throne)
                 state.CurrentPhase = GameState.GamePhase.Voting;
-            }
             else
-            {
                 state.NextPlayer();
-            }
         }
 
         private void ApplyVotingMove(GameState state, VotingMove move)
@@ -127,94 +110,67 @@ namespace MCTS
             if (!move.VoteYes)
             {
                 player.UseNoVote();
-
-                // Se algum jogador votar "Não", o personagem é eliminado
-                var throneCharacter = state.Characters.FirstOrDefault(c => c.CurrentFloor == Floor.Throne);
-                if (throneCharacter != null)
+                var throneChar = state.Characters.FirstOrDefault(c => c.CurrentFloor == Floor.Throne);
+                if (throneChar != null)
                 {
-                    throneCharacter.IsEliminated = true;
-                    throneCharacter.CurrentFloor = Floor.Servants;
+                    throneChar.IsEliminated = true;
+                    throneChar.CurrentFloor = Floor.Servants;
                 }
-
                 state.NextPlayer();
                 state.CurrentPhase = GameState.GamePhase.Ascension;
             }
             else
             {
-                // Se todos votaram "Sim", o rei é coroado e a rodada termina
-                bool allVotedYes = true; // Simulação simplificada da votação
+                foreach (var p in state.Players)
+                    p.Score += p.CalculateScore(state.Characters);
 
-                if (allVotedYes)
-                {
-                    // Calcular pontuação para esta rodada
-                    foreach (var p in state.Players)
-                    {
-                        p.Score += p.CalculateScore(state.Characters);
-                    }
-
-                    state.TransitionToNextPhase(); // Vai para o fim da rodada
-                }
+                state.TransitionToNextPhase();
             }
-        }
-
-        public List<int> GenerateRandomFavorites()
-        {
-            // Gera 6 personagens favoritos aleatórios (índices de 0 a 12)
-            var favorites = new List<int>();
-            while (favorites.Count < 6)
-            {
-                int next = _random.Next(13);
-                if (!favorites.Contains(next))
-                {
-                    favorites.Add(next);
-                }
-            }
-            return favorites;
         }
 
         public void SetupGame(GameState state, int numPlayers)
         {
-            // Determina o número de votos "Não" por jogador
-            int noVotesPerPlayer;
-            switch (numPlayers)
-            {
-                case 3: noVotesPerPlayer = 4; break;
-                case 4: noVotesPerPlayer = 3; break;
-                case 5:
-                case 6: noVotesPerPlayer = 2; break;
-                default: throw new ArgumentException("Número de jogadores inválido");
-            }
+            int noVotes = 0;
 
-            // Configura os jogadores
+            if (numPlayers == 3) noVotes = 4;
+            else if (numPlayers == 4) noVotes = 3;
+            else if (numPlayers == 5 || numPlayers == 6) noVotes = 2;
+            else throw new ArgumentException("Número de jogadores inválido");
+
             for (int i = 0; i < numPlayers; i++)
+                state.Players.Add(new Player(i, GenerateRandomFavorites(), noVotes));
+        }
+
+        public List<int> GenerateRandomFavorites()
+        {
+            var list = new List<int>();
+            while (list.Count < 6)
             {
-                var favorites = GenerateRandomFavorites();
-                state.Players.Add(new Player(i, favorites, noVotesPerPlayer));
+                int next = _random.Next(13);
+                if (!list.Contains(next))
+                    list.Add(next);
             }
+            return list;
         }
 
         public void SimulateGame(GameState state)
         {
             while (!state.IsGameOver())
             {
-                var validMoves = GetValidMoves(state);
-                if (validMoves.Count == 0)
+                var moves = GetValidMoves(state);
+                if (moves.Count == 0)
                 {
-                    // Se não houver movimentos válidos, avançamos para a próxima fase
                     state.TransitionToNextPhase();
                     continue;
                 }
 
-                // Escolhe um movimento aleatório para simulação
-                var move = validMoves[_random.Next(validMoves.Count)];
+                var move = moves[_random.Next(moves.Count)];
                 ApplyMove(state, move);
             }
         }
     }
 
-    public abstract class GameMove
-    {
-    }
+    public abstract class GameMove { }
 
     public class PlacementMove : GameMove
     {
