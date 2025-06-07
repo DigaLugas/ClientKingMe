@@ -112,8 +112,10 @@ namespace ClientKingMe
         {
             try
             {
-                var gameState = gameStateAdapter.CreateGameState(
-                    ValoresJogo, currentGamePhase, availableCharacters, currentBoardState);
+                var lista = Jogo.ListarJogadores(int.Parse(ValoresJogo["idPartida"]));
+                int numPlayers = lista.Split('\n').Count(l => !string.IsNullOrWhiteSpace(l));
+
+                var gameState = gameStateAdapter.CreateGameState(ValoresJogo, currentGamePhase, availableCharacters, currentBoardState, numPlayers);
 
                 var bestMove = mctsAgent.MakeMove(gameState);
                 if (bestMove == null)

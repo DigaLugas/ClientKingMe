@@ -1,8 +1,9 @@
 ﻿// ============================
-// File: Constants.cs (refatorado)
+// File: Constants.cs (refatorado e centralizado)
 // ============================
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ClientKingMe
 {
@@ -22,29 +23,9 @@ namespace ClientKingMe
             {
                 {Positioning, "posicionamento"},
                 {Promotion, "promoção"},
-                {Voting, "Votação"}
+                {Voting, "votação"}
             };
         }
-
-        public static readonly Dictionary<char, string> Characters = new Dictionary<char, string>()
-        {
-            {'A', "Adilson Konrad"}, {'B', "Beatriz Paiva"}, {'C', "Claro"},
-            {'D', "Douglas Baquiao"}, {'E', "Eduardo Takeo"}, {'G', "Guilherme Rey"},
-            {'H', "Heredia"}, {'K', "Karin"}, {'L', "Leonardo Takuno"},
-            {'M', "Mario Toledo"}, {'Q', "Quintas"}, {'R', "Ranulfo"}, {'T', "Toshio"}
-        };
-
-        public static readonly Dictionary<char, int> CharacterMap = new Dictionary<char, int>()
-        {
-            {'A', 0}, {'B', 1}, {'C', 2}, {'D', 3}, {'E', 4},
-            {'G', 5}, {'H', 6}, {'K', 7}, {'L', 8}, {'M', 9},
-            {'Q', 10}, {'R', 11}, {'T', 12}
-        };
-
-        public static readonly List<char> AllCharacterCodes = new List<char>()
-        {
-            'A', 'B', 'C', 'D', 'E', 'G', 'H', 'K', 'L', 'M', 'Q', 'R', 'T'
-        };
 
         public static class GameLimits
         {
@@ -65,6 +46,46 @@ namespace ClientKingMe
         }
 
         public const int AI_CHECK_INTERVAL = 5000;
+
+        // Nova definição unificada dos personagens
+        public static readonly List<CharacterDefinition> CharacterDefinitions = new List<CharacterDefinition>
+        {
+            new CharacterDefinition(0, 'A', "Alighiero o Escudeiro"),
+            new CharacterDefinition(1, 'B', "Beatrice a Encantadora"),
+            new CharacterDefinition(2, 'C', "Clemente o Sargento"),
+            new CharacterDefinition(3, 'D', "Dario o Antiquário"),
+            new CharacterDefinition(4, 'E', "Ernesto o Duque"),
+            new CharacterDefinition(5, 'G', "Fiorello o Pintor"),
+            new CharacterDefinition(6, 'H', "Gavino o Paladino"),
+            new CharacterDefinition(7, 'K', "Irina a Fazendeira"),
+            new CharacterDefinition(8, 'L', "Leonardo o Mensageiro"),
+            new CharacterDefinition(9, 'M', "Merlino o Vidente"),
+            new CharacterDefinition(10, 'Q', "Natale o Guardião"),
+            new CharacterDefinition(11, 'R', "Odessa a Condessa"),
+            new CharacterDefinition(12, 'T', "Piero o Cozinheiro")
+        };
+
+        // Utilitários para acesso rápido
+        public static CharacterDefinition GetById(int id) =>
+            CharacterDefinitions.FirstOrDefault(cd => cd.Id == id);
+
+        public static CharacterDefinition GetByCode(char code) =>
+            CharacterDefinitions.FirstOrDefault(cd => cd.Code == code);
+    }
+
+    // Classe que centraliza os dados do personagem
+    public class CharacterDefinition
+    {
+        public int Id { get; }
+        public char Code { get; }
+        public string Name { get; }
+
+        public CharacterDefinition(int id, char code, string name)
+        {
+            Id = id;
+            Code = code;
+            Name = name;
+        }
     }
 
     public static class Utils
@@ -83,7 +104,10 @@ namespace ClientKingMe
                         charactersOnBoard.Add(parts[1][0]);
                 }
 
-                return ApplicationConstants.AllCharacterCodes.FindAll(c => !charactersOnBoard.Contains(c));
+                return ApplicationConstants.CharacterDefinitions
+                    .Select(c => c.Code)
+                    .Where(c => !charactersOnBoard.Contains(c))
+                    .ToList();
             }
 
             public static bool IsMyTurn(string serverResponse, string playerId)

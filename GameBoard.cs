@@ -26,10 +26,11 @@ namespace ClientKingMe
             try
             {
                 string basePath = ApplicationConstants.ImagesFolderPath;
-                foreach (char code in ApplicationConstants.AllCharacterCodes)
+                foreach (var def in ApplicationConstants.CharacterDefinitions)
                 {
-                    characterImages[code] = Image.FromFile($"{basePath}/{code}.png");
+                    characterImages[def.Code] = Image.FromFile($"{basePath}/{def.Code}.png");
                 }
+
             }
             catch (Exception ex)
             {

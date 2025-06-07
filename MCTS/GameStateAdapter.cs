@@ -9,10 +9,8 @@ namespace ClientKingMe
     {
         private readonly MCTS.GameRules _gameRules = new MCTS.GameRules();
 
-        public MCTS.GameState CreateGameState(Dictionary<string, string> gameSessionData, string gamePhase, List<char> availableCharacters, string boardState)
+        public MCTS.GameState CreateGameState(Dictionary<string, string> gameSessionData, string gamePhase, List<char> availableCharacters, string boardState, int numPlayers)
         {
-            int numPlayers = 4;
-
             var gameState = new MCTS.GameState(numPlayers);
             _gameRules.SetupGame(gameState, numPlayers);
 
@@ -23,8 +21,12 @@ namespace ClientKingMe
             ProcessBoardState(gameState, boardState);
             foreach (var character in gameState.Characters)
             {
-                character.IsEliminated = false;
+                if (character.CurrentFloor == MCTS.Floor.Servants && gameState.CurrentPhase != MCTS.GameState.GamePhase.Placement)
+                {
+                    character.IsEliminated = true;
+                }
             }
+
 
             return gameState;
         }
@@ -51,13 +53,14 @@ namespace ClientKingMe
                 if (parts.Length >= 2 && int.TryParse(parts[0], out int floor))
                 {
                     char characterCode = parts[1][0];
-                    int characterId;
-                    if (ApplicationConstants.CharacterMap.TryGetValue(characterCode, out characterId))
+                    var def = ApplicationConstants.CharacterDefinitions.FirstOrDefault(d => d.Code == characterCode);
+                    if (def != null)
                     {
-                        var character = gameState.Characters.FirstOrDefault(c => c.Id == characterId);
+                        var character = gameState.Characters.FirstOrDefault(c => c.Id == def.Id);
                         if (character != null)
                             character.CurrentFloor = (MCTS.Floor)floor;
                     }
+
                 }
             }
         }
@@ -85,12 +88,8 @@ namespace ClientKingMe
 
         private char GetCharacterCode(int characterId)
         {
-            foreach (var kvp in ApplicationConstants.CharacterMap)
-            {
-                if (kvp.Value == characterId)
-                    return kvp.Key;
-            }
-            return '?';
+            return ApplicationConstants.GetById(characterId).Code;
         }
+
     }
 }

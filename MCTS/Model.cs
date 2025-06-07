@@ -164,6 +164,7 @@ namespace MCTS
 
             switch (numPlayers)
             {
+                case 2: CharactersToPlacePerPlayer = 6; break;
                 case 3: CharactersToPlacePerPlayer = 4; break;
                 case 4: CharactersToPlacePerPlayer = 3; break;
                 case 5:
@@ -174,23 +175,11 @@ namespace MCTS
 
         private List<Character> InitializeCharacters()
         {
-            return new List<Character>
-            {
-                new Character(0, "Alighiero o Escudeiro"),
-                new Character(1, "Beatrice a Encantadora"),
-                new Character(2, "Clemente o Sargento"),
-                new Character(3, "Dario o Antiquário"),
-                new Character(4, "Ernesto o Duque"),
-                new Character(5, "Fiorello o Pintor"),
-                new Character(6, "Gavino o Paladino"),
-                new Character(7, "Irina a Fazendeira"),
-                new Character(8, "Leonardo o Mensageiro"),
-                new Character(9, "Merlino o Vidente"),
-                new Character(10, "Natale o Guardião"),
-                new Character(11, "Odessa a Condessa"),
-                new Character(12, "Piero o Cozinheiro")
-            };
+            return ApplicationConstants.CharacterDefinitions
+                .Select(cd => new Character(cd.Id, cd.Name))
+                .ToList();
         }
+
 
         public bool IsGameOver()
         {

@@ -132,7 +132,7 @@ namespace MCTS
         {
             int noVotes = 0;
 
-            if (numPlayers == 3) noVotes = 4;
+            if (numPlayers == 2 || numPlayers == 3) noVotes = 4;
             else if (numPlayers == 4) noVotes = 3;
             else if (numPlayers == 5 || numPlayers == 6) noVotes = 2;
             else throw new ArgumentException("Número de jogadores inválido");
