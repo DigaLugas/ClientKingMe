@@ -62,13 +62,11 @@ namespace ClientKingMe
 
         private void AiTimer_Tick(object sender, EventArgs e)
         {
-            if (!autoPlayEnabled) return;
-
             try
             {
                 VerificarEstadoJogo();
 
-                if (currentGameStatus == "E" || !autoPlayEnabled) return;
+                if (currentGameStatus == "A" || currentGameStatus == "E" || !autoPlayEnabled) return;
 
                 var turnInfo = Utils.Server.SafeServerCall(() => Jogo.VerificarVez(int.Parse(ValoresJogo["idPartida"])));
                 if (turnInfo == null || !Utils.Game.IsMyTurn(turnInfo, ValoresJogo["idJogador"])) return;
@@ -296,8 +294,20 @@ namespace ClientKingMe
             try
             {
                 string response = Jogo.ListarPartidas("T");
+
+                if (string.IsNullOrWhiteSpace(response))
+                {
+                    MessageBox.Show("A resposta do servidor está vazia ao listar partidas.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 string[] games = response.Split('\n');
-                string nomePartidaAtual = ValoresJogo["nomePartida"];
+
+                if (!ValoresJogo.TryGetValue("nomePartida", out string nomePartidaAtual))
+                {
+                    MessageBox.Show("Chave 'nomePartida' não encontrada em ValoresJogo.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
                 foreach (string game in games)
                 {
@@ -310,9 +320,7 @@ namespace ClientKingMe
                             currentGameStatus = details[3].Trim();
 
                             if (currentGameStatus == "E" && statusAnterior != "E")
-                            {
                                 DesligarBot();
-                            }
                             else if (currentGameStatus == "J" && statusAnterior == "A")
                             {
                                 aiStatusLabel.Text = "AI: Jogo iniciado - Ativo";
@@ -326,9 +334,10 @@ namespace ClientKingMe
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError($"Erro ao verificar estado do jogo: {ex.Message}");
+                MessageBox.Show($"Erro ao verificar estado do jogo:\n{ex.Message}\n{ex.StackTrace}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
         private void DesligarBot()
         {
@@ -347,9 +356,13 @@ namespace ClientKingMe
             label7.Text = "Resultado final:";
             foreach (var jogador in jogadores)
             {
+                if (string.IsNullOrWhiteSpace(jogador)) continue;
+
                 var jogadorDados = jogador.Split(',');
+                if (jogadorDados.Length < 3) continue;
                 label7.Text += $"\nJogador {jogadorDados[1]} - {jogadorDados[2]} pontos";
             }
+
         }
 
         private void ExibirTurnoJogadorAtual(string idAtual)

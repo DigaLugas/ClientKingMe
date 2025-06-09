@@ -9,12 +9,13 @@ namespace ClientKingMe
         {
             if (string.IsNullOrEmpty(response))
             {
-                Show("Erro: Resposta do servidor está vazia.", "Erro", MessageBoxIcon.Error);
+                //Show("Erro: Resposta do servidor está vazia.", "Erro", MessageBoxIcon.Error);
                 return true;
             }
 
             if (response.StartsWith("ERRO"))
             {
+                Show(response, "Erro", MessageBoxIcon.Error);
                 return true;
             }
 

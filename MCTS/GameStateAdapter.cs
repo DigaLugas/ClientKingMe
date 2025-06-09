@@ -50,7 +50,12 @@ namespace ClientKingMe
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Não foi possível obter cartas do jogador {i}");
+                    // Atribuir favoritos aleatórios ou vazios (conforme o comportamento desejado)
+                    favoriteCharacters = ApplicationConstants.CharacterDefinitions
+                        .OrderBy(_ => Guid.NewGuid()) // Embaralha
+                        .Take(6)
+                        .Select(cd => cd.Id)
+                        .ToList();
                 }
 
                 gameState.Players.Add(new MCTS.Player(i, favoriteCharacters, noVotes));
