@@ -27,13 +27,6 @@ namespace ClientKingMe
             };
         }
 
-        public static class GameLimits
-        {
-            public const int MaxCharactersPerFloor = 4;
-            public const int MaxRounds = 3;
-            public const int MaxFloors = 6;
-        }
-
         public static class ScoreValues
         {
             public const int ThroneScore = 10;
@@ -45,10 +38,9 @@ namespace ClientKingMe
             public const int ServantsScore = 0;
         }
 
-        public const int AI_CHECK_INTERVAL = 5000;
+        public const int AI_CHECK_INTERVAL = 4000;
 
-        // Nova definição unificada dos personagens
-        public static readonly List<CharacterDefinition> CharacterDefinitions = new List<CharacterDefinition>
+        public static List<CharacterDefinition> CharacterDefinitions = new List<CharacterDefinition>
         {
             new CharacterDefinition(0, 'A', "Alighiero o Escudeiro"),
             new CharacterDefinition(1, 'B', "Beatrice a Encantadora"),

@@ -1,7 +1,4 @@
-﻿// ============================
-// File: Session.cs (refatorado para C# 7.3)
-// ============================
-using KingMeServer;
+﻿using KingMeServer;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -207,16 +204,6 @@ namespace ClientKingMe
             }
 
             return null;
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            if (aiTimer != null)
-            {
-                aiTimer.Stop();
-                aiTimer.Dispose();
-            }
-            base.OnFormClosing(e);
         }
 
         private void ApplyCustomStyling()

@@ -117,21 +117,6 @@ namespace MCTS
             }
             return roundScore;
         }
-
-        private int GetScoreForFloor(Floor floor)
-        {
-            switch (floor)
-            {
-                case Floor.Throne: return ApplicationConstants.ScoreValues.ThroneScore;
-                case Floor.Nobles: return ApplicationConstants.ScoreValues.NoblesScore;
-                case Floor.Dignitaries: return ApplicationConstants.ScoreValues.DignitariesScore;
-                case Floor.Officers: return ApplicationConstants.ScoreValues.OfficersScore;
-                case Floor.Merchants: return ApplicationConstants.ScoreValues.MerchantsScore;
-                case Floor.Artisans: return ApplicationConstants.ScoreValues.ArtisansScore;
-                case Floor.Servants:
-                default: return ApplicationConstants.ScoreValues.ServantsScore;
-            }
-        }
     }
 
     public class GameState

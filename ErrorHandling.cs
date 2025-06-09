@@ -1,7 +1,4 @@
-﻿// ============================
-// File: ErrorHandling.cs (refatorado)
-// ============================
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace ClientKingMe
@@ -28,8 +25,6 @@ namespace ClientKingMe
         public static void ShowError(string message) => Show(message, "Erro", MessageBoxIcon.Error);
 
         public static void ShowWarning(string message) => Show(message, "Aviso", MessageBoxIcon.Warning);
-
-        public static void ShowInfo(string message) => Show(message, "Informação", MessageBoxIcon.Information);
 
         private static void Show(string message, string title, MessageBoxIcon icon)
         {

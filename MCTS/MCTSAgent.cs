@@ -187,16 +187,6 @@ namespace ClientKingMe
             return totalValue > decisionThreshold;
         }
 
-        public List<MCTS.GameMove> GetValidMoves(MCTS.GameState gameState)
-        {
-            return _gameRules.GetValidMoves(gameState);
-        }
-
-        public void ApplyMove(MCTS.GameState gameState, MCTS.GameMove move)
-        {
-            _gameRules.ApplyMove(gameState, move);
-        }
-
         public string GetMoveDescription(MCTS.GameState gameState, MCTS.GameMove move)
         {
             if (move is MCTS.PlacementMove placementMove)

@@ -128,18 +128,6 @@ namespace MCTS
             }
         }
 
-        public void SetupGame(GameState state, int numPlayers)
-        {
-            int noVotes = 0;
-
-            if (numPlayers == 2 || numPlayers == 3) noVotes = 4;
-            else if (numPlayers == 4) noVotes = 3;
-            else if (numPlayers == 5 || numPlayers == 6) noVotes = 2;
-            else throw new ArgumentException("Número de jogadores inválido");
-
-            for (int i = 0; i < numPlayers; i++)
-                state.Players.Add(new Player(i, GenerateRandomFavorites(), noVotes));
-        }
 
         public List<int> GenerateRandomFavorites()
         {
@@ -151,22 +139,6 @@ namespace MCTS
                     list.Add(next);
             }
             return list;
-        }
-
-        public void SimulateGame(GameState state)
-        {
-            while (!state.IsGameOver())
-            {
-                var moves = GetValidMoves(state);
-                if (moves.Count == 0)
-                {
-                    state.TransitionToNextPhase();
-                    continue;
-                }
-
-                var move = moves[_random.Next(moves.Count)];
-                ApplyMove(state, move);
-            }
         }
     }
 
