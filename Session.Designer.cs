@@ -39,7 +39,6 @@
             this.label8 = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.button2 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -134,22 +133,11 @@
             this.label9.TabIndex = 15;
             this.label9.Text = "Fase";
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(12, 59);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(190, 28);
-            this.button2.TabIndex = 16;
-            this.button2.Text = "ativar auto-play";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
             // GameSessionForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(586, 522);
-            this.Controls.Add(this.button2);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.label8);
@@ -180,6 +168,5 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Button button2;
     }
 }

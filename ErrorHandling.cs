@@ -18,7 +18,7 @@ namespace ClientKingMe
 
             if (response.StartsWith("ERRO"))
             {
-                Show(response, "Erro", MessageBoxIcon.Error);
+                //Show(response, "Erro", MessageBoxIcon.Error);
                 return true;
             }
 
