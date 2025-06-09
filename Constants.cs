@@ -1,7 +1,4 @@
-﻿// ============================
-// File: Constants.cs (refatorado e centralizado)
-// ============================
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -57,7 +54,6 @@ namespace ClientKingMe
             new CharacterDefinition(12, 'T', "Piero o Cozinheiro")
         };
 
-        // Utilitários para acesso rápido
         public static CharacterDefinition GetById(int id) =>
             CharacterDefinitions.FirstOrDefault(cd => cd.Id == id);
 
@@ -65,7 +61,6 @@ namespace ClientKingMe
             CharacterDefinitions.FirstOrDefault(cd => cd.Code == code);
     }
 
-    // Classe que centraliza os dados do personagem
     public class CharacterDefinition
     {
         public int Id { get; }

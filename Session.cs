@@ -20,6 +20,7 @@ namespace ClientKingMe
         private List<char> availableCharacters = new List<char>();
         private string currentBoardState = string.Empty;
         private string currentGamePhase = ApplicationConstants.GamePhases.Positioning;
+        private string currentGameStatus = "A";
 
         private readonly Timer aiTimer;
         private bool autoPlayEnabled = true;
@@ -65,6 +66,10 @@ namespace ClientKingMe
 
             try
             {
+                VerificarEstadoJogo();
+
+                if (currentGameStatus == "E" || !autoPlayEnabled) return;
+
                 var turnInfo = Utils.Server.SafeServerCall(() => Jogo.VerificarVez(int.Parse(ValoresJogo["idPartida"])));
                 if (turnInfo == null || !Utils.Game.IsMyTurn(turnInfo, ValoresJogo["idJogador"])) return;
 
@@ -92,16 +97,13 @@ namespace ClientKingMe
                 availableCharacters = Utils.Game.GetAvailableCharacters(currentBoardState);
         }
 
-        // Adicionar estas variáveis à classe GameSessionForm:
         private string playerCardsInfo = string.Empty;
         private bool playerCardsLoaded = false;
 
-        // Modificar o método ExecuteAiMove():
         private void ExecuteAiMove()
         {
             try
             {
-                // Garantir que temos as cartas do jogador antes de fazer movimentos
                 if (!playerCardsLoaded)
                 {
                     LoadPlayerCards();
@@ -110,14 +112,13 @@ namespace ClientKingMe
                 var lista = Jogo.ListarJogadores(int.Parse(ValoresJogo["idPartida"]));
                 int numPlayers = lista.Split('\n').Count(l => !string.IsNullOrWhiteSpace(l));
 
-                // Passar as informações das cartas do jogador para o GameState
                 var gameState = gameStateAdapter.CreateGameState(
                     ValoresJogo,
                     currentGamePhase,
                     availableCharacters,
                     currentBoardState,
                     numPlayers,
-                    playerCardsInfo  // ← Nova informação das cartas reais do jogador
+                    playerCardsInfo
                 );
 
                 var bestMove = mctsAgent.MakeMove(gameState);
@@ -132,7 +133,6 @@ namespace ClientKingMe
                 string moveData = gameStateAdapter.ConvertMoveToClientFormat(bestMove);
                 string moveDescription = mctsAgent.GetMoveDescription(gameState, bestMove);
 
-                // Mostrar análise da decisão se for votação
                 if (bestMove is MCTS.VotingMove votingMove)
                 {
                     string voteReason = GetVotingReason(gameState, votingMove);
@@ -164,7 +164,6 @@ namespace ClientKingMe
             }
         }
 
-        // Novo método para carregar as cartas do jogador:
         private void LoadPlayerCards()
         {
             try
@@ -208,8 +207,8 @@ namespace ClientKingMe
 
         private void ApplyCustomStyling()
         {
-            Label[] labels = { label1, label2, label3, label4, label5, label6, label8, label9 };
-            int[] sizes = { 13, 13, 10, 10, 10, 10, 9, 9 };
+            Label[] labels = { label1, label2, label3, label4, label5, label6, label7, label8, label9 };
+            int[] sizes = { 13, 13, 10, 10, 10, 10, 10, 9, 9 };
 
             for (int i = 0; i < labels.Length; i++)
             {
@@ -264,7 +263,6 @@ namespace ClientKingMe
             }
         }
 
-        // Modificar o método ProcessarTurno para recarregar cartas quando necessário:
         private void ProcessarTurno(string response)
         {
             var lines = response.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -276,18 +274,82 @@ namespace ClientKingMe
                 string faseAnterior = currentGamePhase;
                 currentGamePhase = firstLine[3];
 
-                if (ApplicationConstants.GamePhases.Names.ContainsKey(currentGamePhase))
-                    label9.Text = "Estamos na fase de " + ApplicationConstants.GamePhases.Names[currentGamePhase];
+                VerificarEstadoJogo();
 
-                // Recarregar cartas quando entrar na fase de posicionamento
+                if (ApplicationConstants.GamePhases.Names.ContainsKey(currentGamePhase))
+                {
+                    label9.Text = $"Estamos na fase de {ApplicationConstants.GamePhases.Names[currentGamePhase]}";
+                }
+
                 if (currentGamePhase == ApplicationConstants.GamePhases.Positioning && faseAnterior != ApplicationConstants.GamePhases.Positioning)
                 {
-                    playerCardsLoaded = false; // Forçar recarregamento das cartas
+                    playerCardsLoaded = false;
                     LoadPlayerCards();
                 }
             }
 
             ExibirTurnoJogadorAtual(firstLine[0]);
+        }
+
+        private void VerificarEstadoJogo()
+        {
+            try
+            {
+                string response = Jogo.ListarPartidas("T");
+                string[] games = response.Split('\n');
+                string nomePartidaAtual = ValoresJogo["nomePartida"];
+
+                foreach (string game in games)
+                {
+                    if (!string.IsNullOrWhiteSpace(game))
+                    {
+                        string[] details = game.Split(',');
+                        if (details.Length >= 2 && details[1].Trim() == nomePartidaAtual)
+                        {
+                            string statusAnterior = currentGameStatus;
+                            currentGameStatus = details[3].Trim();
+
+                            if (currentGameStatus == "E" && statusAnterior != "E")
+                            {
+                                DesligarBot();
+                            }
+                            else if (currentGameStatus == "J" && statusAnterior == "A")
+                            {
+                                aiStatusLabel.Text = "AI: Jogo iniciado - Ativo";
+                                aiStatusLabel.ForeColor = Color.Green;
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.ShowError($"Erro ao verificar estado do jogo: {ex.Message}");
+            }
+        }
+
+        private void DesligarBot()
+        {
+            autoPlayEnabled = false;
+            aiTimer.Stop();
+
+            aiStatusLabel.Text = $"AI: Desligado";
+            aiStatusLabel.ForeColor = Color.Red;
+
+            MessageBox.Show($"Partida finalizada",
+                            "Bot Desligado",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+
+            var jogadores = Jogo.ListarJogadores(int.Parse(ValoresJogo["idPartida"])).Split('\n');
+            label7.Text = "Resultado final:";
+            foreach (var jogador in jogadores)
+            {
+                var jogadorDados = jogador.Split(',');
+                label7.Text += $"\nJogador {jogadorDados[1]} - {jogadorDados[2]} pontos";
+            }
         }
 
         private void ExibirTurnoJogadorAtual(string idAtual)

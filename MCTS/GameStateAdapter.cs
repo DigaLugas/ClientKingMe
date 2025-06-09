@@ -17,7 +17,6 @@ namespace ClientKingMe
             int currentPlayerId = int.Parse(gameSessionData["idJogador"]);
             gameState.CurrentPlayerIndex = currentPlayerId % numPlayers;
 
-            // Configurar jogadores com personagens favoritos reais
             SetupPlayersWithRealFavorites(gameState, currentPlayerId, playerCardsInfo, numPlayers);
 
             SetGamePhase(gameState, gamePhase);
@@ -39,7 +38,6 @@ namespace ClientKingMe
         {
             gameState.Players.Clear();
 
-            // Determinar número de votos "não" baseado no número de jogadores
             int noVotes = GetNoVotesForPlayerCount(numPlayers);
 
             for (int i = 0; i < numPlayers; i++)
@@ -48,13 +46,11 @@ namespace ClientKingMe
 
                 if (i == currentPlayerId && !string.IsNullOrEmpty(playerCardsInfo))
                 {
-                    // Usar personagens reais do jogador atual
                     favoriteCharacters = ParsePlayerCards(playerCardsInfo);
                 }
                 else
                 {
-                    // Gerar aleatoriamente para outros jogadores
-                    favoriteCharacters = _gameRules.GenerateRandomFavorites();
+                    throw new InvalidOperationException($"Não foi possível obter cartas do jogador {i}");
                 }
 
                 gameState.Players.Add(new MCTS.Player(i, favoriteCharacters, noVotes));
@@ -79,18 +75,16 @@ namespace ClientKingMe
             var favoriteIds = new List<int>();
 
             if (string.IsNullOrEmpty(playerCardsInfo))
-                return _gameRules.GenerateRandomFavorites();
+                throw new ArgumentException("PlayerCardsInfo está vazio ou nulo");
 
             try
             {
-                // Assumindo que playerCardsInfo contém códigos de personagens separados por vírgula ou quebra de linha
                 var lines = playerCardsInfo.Split(new[] { "\r\n", "\n", "," }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var line in lines)
                 {
                     var trimmedLine = line.Trim();
 
-                    // Se a linha contém um código de personagem
                     if (trimmedLine.Length > 0)
                     {
                         char characterCode = trimmedLine[0];
@@ -103,21 +97,16 @@ namespace ClientKingMe
                     }
                 }
 
-                // Se não conseguimos parsear 6 personagens, completar com aleatórios
-                while (favoriteIds.Count < 6)
+                if (favoriteIds.Count < 6)
                 {
-                    var randomId = new Random().Next(13);
-                    if (!favoriteIds.Contains(randomId))
-                        favoriteIds.Add(randomId);
+                    throw new ArgumentException($"Só foi possível parsear {favoriteIds.Count} personagens, mas são necessários 6");
                 }
 
-                // Se temos mais de 6, pegar apenas os primeiros 6
                 return favoriteIds.Take(6).ToList();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Em caso de erro no parsing, usar personagens aleatórios
-                return _gameRules.GenerateRandomFavorites();
+                throw new ArgumentException($"Erro ao fazer parsing das cartas do jogador: {ex.Message}", ex);
             }
         }
 
@@ -180,7 +169,6 @@ namespace ClientKingMe
             return ApplicationConstants.GetById(characterId).Code;
         }
 
-        // Método para obter informações dos personagens do jogador do servidor
         public string GetPlayerCardsFromServer(Dictionary<string, string> gameSessionData)
         {
             try

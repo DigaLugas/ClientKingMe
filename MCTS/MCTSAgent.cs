@@ -38,20 +38,16 @@ namespace ClientKingMe
             var throneCharacter = gameState.Characters.FirstOrDefault(c => c.CurrentFloor == MCTS.Floor.Throne);
 
             if (player == null)
-                return new MCTS.VotingMove(true); // Fallback
+                return new MCTS.VotingMove(true);
 
-            // Se não há personagem no trono, votar sim para acelerar o jogo
             if (throneCharacter == null)
                 return new MCTS.VotingMove(true);
 
-            // Análise estratégica da votação
             var votingAnalysis = AnalyzeVotingScenarios(gameState, player, throneCharacter);
             
-            // Se não temos votos "não", só podemos votar sim
             if (!player.HasNoVotes())
                 return new MCTS.VotingMove(true);
 
-            // Decidir baseado na análise estratégica
             if (votingAnalysis.ShouldVoteNo)
                 return new MCTS.VotingMove(false);
             else
@@ -62,23 +58,18 @@ namespace ClientKingMe
         {
             var analysis = new VotingAnalysis();
 
-            // Calcular pontos se votarmos SIM (personagem fica no trono)
             int pointsIfVoteYes = CalculateRoundPoints(gameState, player, throneCharacter, true);
             
-            // Calcular pontos se votarmos NÃO (personagem vai para servos)
             int pointsIfVoteNo = CalculateRoundPoints(gameState, player, throneCharacter, false);
 
             analysis.PointsIfVoteYes = pointsIfVoteYes;
             analysis.PointsIfVoteNo = pointsIfVoteNo;
             analysis.PointsDifference = pointsIfVoteNo - pointsIfVoteYes;
 
-            // Análise de oportunidade futura
             analysis.FutureOpportunityValue = AnalyzeFutureOpportunities(gameState, player);
 
-            // Análise competitiva (verificar se outros jogadores se beneficiam mais)
             analysis.CompetitiveAdvantage = AnalyzeCompetitivePosition(gameState, player, throneCharacter);
 
-            // Decisão final baseada em múltiplos fatores
             analysis.ShouldVoteNo = ShouldVoteNoBasedOnAnalysis(analysis, gameState.CurrentRound);
 
             return analysis;
@@ -95,15 +86,13 @@ namespace ClientKingMe
 
                 if (character.Id == throneCharacter.Id)
                 {
-                    // Se é o personagem no trono
                     if (throneCharacterStays)
-                        totalPoints += ApplicationConstants.ScoreValues.ThroneScore; // 10 pontos
+                        totalPoints += ApplicationConstants.ScoreValues.ThroneScore;
                     else
-                        totalPoints += ApplicationConstants.ScoreValues.ServantsScore; // 0 pontos
+                        totalPoints += ApplicationConstants.ScoreValues.ServantsScore;
                 }
                 else
                 {
-                    // Outros personagens mantêm sua posição
                     totalPoints += GetPointsForFloor(character.CurrentFloor);
                 }
             }
@@ -130,17 +119,13 @@ namespace ClientKingMe
         {
             double futureValue = 0;
 
-            // Se ainda há rodadas restantes, considere as oportunidades futuras
             if (gameState.CurrentRound < 3)
             {
-                // Verificar quantos dos nossos personagens favoritos estão em posições baixas
-                // e poderiam se beneficiar de mais tempo para subir
                 foreach (var favoriteId in player.FavoriteCharacters)
                 {
                     var character = gameState.Characters.FirstOrDefault(c => c.Id == favoriteId);
                     if (character != null && !character.IsEliminated)
                     {
-                        // Personagens em andares baixos têm mais potencial de crescimento
                         if (character.CurrentFloor <= MCTS.Floor.Merchants)
                             futureValue += (3 - (int)character.CurrentFloor) * 0.5;
                     }
@@ -154,20 +139,17 @@ namespace ClientKingMe
         {
             double competitiveAdvantage = 0;
 
-            // Verificar se outros jogadores se beneficiam mais do personagem no trono
             foreach (var otherPlayer in gameState.Players.Where(p => p.Id != player.Id))
             {
                 if (otherPlayer.FavoriteCharacters.Contains(throneCharacter.Id))
                 {
-                    // Outro jogador também se beneficia - isso diminui nosso incentivo para votar sim
-                    competitiveAdvantage -= 5; // Penalidade por beneficiar oponentes
+                    competitiveAdvantage -= 5;
                 }
             }
 
-            // Se somos os únicos a nos beneficiar, aumenta o incentivo para votar sim
             if (player.FavoriteCharacters.Contains(throneCharacter.Id) && competitiveAdvantage == 0)
             {
-                competitiveAdvantage += 3; // Bônus por vantagem exclusiva
+                competitiveAdvantage += 3;
             }
 
             return competitiveAdvantage;
@@ -175,15 +157,12 @@ namespace ClientKingMe
 
         private bool ShouldVoteNoBasedOnAnalysis(VotingAnalysis analysis, int currentRound)
         {
-            // Limiar de decisão baseado na rodada atual
-            double decisionThreshold = currentRound == 3 ? 3 : 5; // Mais conservador na última rodada
+            double decisionThreshold = currentRound == 3 ? 3 : 5;
 
-            // Fatores que influenciam a decisão
             double totalValue = analysis.PointsDifference + 
                                analysis.FutureOpportunityValue + 
                                analysis.CompetitiveAdvantage;
 
-            // Decidir votar NÃO se o valor total for positivo e acima do limiar
             return totalValue > decisionThreshold;
         }
 
@@ -207,7 +186,6 @@ namespace ClientKingMe
             return "Movimento desconhecido";
         }
 
-        // Classe auxiliar para análise de votação
         private class VotingAnalysis
         {
             public int PointsIfVoteYes { get; set; }

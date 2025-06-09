@@ -53,7 +53,7 @@ namespace MCTS
         {
             Id = id;
             FavoriteCharacters = favoriteCharacters;
-            YesVotes = 1; // Sempre tem 1 voto "Sim"
+            YesVotes = 1;
             NoVotes = noVotes;
             Score = 0;
         }

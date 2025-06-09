@@ -30,17 +30,14 @@ namespace MCTS
             var iterationsPerThread = _maxIterations / _numThreads;
             var tasks = new Task[_numThreads];
 
-            // Criando as tarefas paralelas
             for (int i = 0; i < _numThreads; i++)
             {
                 int threadId = i;
                 tasks[i] = Task.Run(() => ParallelSearch(root, iterationsPerThread, threadId));
             }
 
-            // Aguardando todas as tarefas concluírem
             Task.WaitAll(tasks);
 
-            // Selecionando o melhor filho
             var bestChild = root.SelectChild();
             return bestChild?.Move;
         }
@@ -49,13 +46,10 @@ namespace MCTS
         {
             for (int i = 0; i < iterations; i++)
             {
-                // Fase de seleção
                 var selectedNode = Selection(root);
 
-                // Fase de expansão e simulação
                 if (!selectedNode.IsTerminal())
                 {
-                    // Se o nó não estiver totalmente expandido, expanda-o
                     MCTSNode nodeToExplore;
 
                     lock (_rootLock)
@@ -72,10 +66,8 @@ namespace MCTS
 
                     if (nodeToExplore != null)
                     {
-                        // Fase de simulação
                         var simulationResult = Simulation(nodeToExplore);
 
-                        // Fase de backpropagation
                         Backpropagation(nodeToExplore, simulationResult);
                     }
                 }
@@ -97,11 +89,9 @@ namespace MCTS
 
         private double Simulation(MCTSNode node)
         {
-            // Clone o estado para não afetar a árvore original
             var simulationState = node.State.Clone();
             int playerId = node.PlayerId;
 
-            // Simula o jogo até o final
             while (!simulationState.IsGameOver())
             {
                 var validMoves = _rules.GetValidMoves(simulationState);
@@ -111,12 +101,10 @@ namespace MCTS
                     continue;
                 }
 
-                // Escolhe um movimento aleatório para simulação
                 var randomMove = validMoves[_random.Next(validMoves.Count)];
                 _rules.ApplyMove(simulationState, randomMove);
             }
 
-            // Avalia o estado final para o jogador atual
             return EvaluateState(simulationState, playerId);
         }
 
@@ -134,12 +122,9 @@ namespace MCTS
             if (playerId < 0 || playerId >= state.Players.Count)
                 return 0;
 
-            // Obtém a pontuação do jogador atual
             var player = state.Players[playerId];
 
-            // Normaliza a pontuação para algo entre 0 e 1
-            // O máximo teórico de pontos em uma rodada é 33
-            return player.Score / 99.0; // 33 pontos * 3 rodadas = 99 pontos máximos
+            return player.Score / 99.0;
         }
     }
 }

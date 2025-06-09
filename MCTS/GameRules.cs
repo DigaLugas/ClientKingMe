@@ -127,19 +127,6 @@ namespace MCTS
                 state.TransitionToNextPhase();
             }
         }
-
-
-        public List<int> GenerateRandomFavorites()
-        {
-            var list = new List<int>();
-            while (list.Count < 6)
-            {
-                int next = _random.Next(13);
-                if (!list.Contains(next))
-                    list.Add(next);
-            }
-            return list;
-        }
     }
 
     public abstract class GameMove { }

@@ -39,22 +39,18 @@ namespace ClientKingMe
             this.Font = new Font("Segoe UI", 9, FontStyle.Regular);
             this.Text = "KingMe - Gerenciador de Partidas";
 
-            // Style combo box and text box
             DesignerConfigurator.StyleComboBox(comboBoxPartidas, designer.primaryColor, 10);
             DesignerConfigurator.StyleTextBox(detalhesPartida, designer.primaryColor, 10);
 
-            // Style buttons - keeping original variable names
             DesignerConfigurator.StyleButton(criarPartida, designer.primaryColor, designer.accentColor, 10);
             DesignerConfigurator.StyleButton(entrarPartida, designer.primaryColor, designer.accentColor, 10);
 
-            // Style labels
             Label[] labelsToStyle = { label1, label2, label3, label4, label5, label6, label8, label9, label11 };
             foreach (Label label in labelsToStyle)
             {
                 DesignerConfigurator.StyleLabel(label, designer.primaryColor, 10);
             }
 
-            // Style headers
             Label[] headerLabels = { label1, label7, label12 };
             foreach (Label header in headerLabels)
             {
@@ -73,7 +69,7 @@ namespace ClientKingMe
 
             string response = Jogo.ListarPartidas("T");
             string[] games = response.Split('\n');
-
+            
             foreach (string game in games)
             {
                 if (!string.IsNullOrWhiteSpace(game))
@@ -106,15 +102,12 @@ namespace ClientKingMe
             string[] details = selectedGame.Split('|');
             string gameId = details[0].Split(':')[1].Trim();
 
-            // Update game details area
             detalhesPartida.Text += "--- DETALHES DA PARTIDA ---" + Environment.NewLine;
             detalhesPartida.Text += selectedGame + Environment.NewLine;
             detalhesPartida.Text += Environment.NewLine;
 
-            // Update game name label
             label11.Text = $"Nome da partida:\n{details[1].Split(':')[1].Trim()}\nId: {gameId}";
 
-            // Get and display players
             string playersResponse = Jogo.ListarJogadores(Convert.ToInt32(gameId));
             string[] players = playersResponse.Split('\n');
 
@@ -130,7 +123,6 @@ namespace ClientKingMe
             }
         }
 
-        // Keep original method name to match the designer file
         private void button1_Click_1(object sender, EventArgs e)
         {
             string response = Jogo.CriarPartida(
@@ -145,7 +137,6 @@ namespace ClientKingMe
             RefreshGamesList();
         }
 
-        // Keep original method name to match the designer file
         private void button2_Click(object sender, EventArgs e)
         {
             int gameId = Convert.ToInt32(label11.Text.Split(':')[2]);
@@ -154,7 +145,6 @@ namespace ClientKingMe
             if (ErrorHandler.HandleServerResponse(response))
                 return;
 
-            // Prepare game session data
             Dictionary<string, string> gameSessionData = new Dictionary<string, string>
             {
                 ["idPartida"] = Convert.ToString(gameId),
@@ -164,14 +154,12 @@ namespace ClientKingMe
                 ["senhaJogador"] = response.Split(',')[1]
             };
 
-            // Launch game session form
             GameSessionForm gameSessionForm = new GameSessionForm(gameSessionData);
             gameSessionForm.Show();
             gameSessionForm.FormClosed += (s, args) => Application.Exit();
             gameSessionForm.GameSessionData = gameSessionData;
         }
 
-        // Keep all original event handlers exactly as they were
         private void button1_Click(object sender, EventArgs e) { }
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e) { }
         private void label1_Click(object sender, EventArgs e) { }
